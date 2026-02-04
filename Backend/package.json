@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --exec babel-node src/index.js"
+    "start": "nodemon --exec npx babel-node src/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -23,8 +23,8 @@
     "mysql2": "2.3.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.5",
-    "@babel/node": "^7.24.7",
+    "@babel/core": "^7.29.0",
+    "@babel/node": "^7.29.0",
     "@babel/preset-env": "^7.28.5",
     "nodemon": "^2.0.15"
   }

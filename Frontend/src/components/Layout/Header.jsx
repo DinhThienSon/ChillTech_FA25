@@ -153,16 +153,8 @@ const AppHeader = () => {
                   label: <Link to="/products">Sản phẩm</Link>,
                 },
                 {
-                  key: "category",
-                  label: "Danh mục",
-                },
-                {
                   key: "about",
-                  label: "Về chúng tôi",
-                },
-                {
-                  key: "contact",
-                  label: "Liên hệ",
+                  label: <Link to="about"> Về chúng tôi</Link>,
                 },
               ]}
             />
@@ -186,7 +178,7 @@ const AppHeader = () => {
             </Space>
           </Col>
         </Row>
-      </Header>
+      </Header >
     </>
   );
 };
