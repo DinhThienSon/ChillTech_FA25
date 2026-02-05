@@ -21,6 +21,20 @@ const HomePage = () => {
           // Lấy 4 sản phẩm đầu tiên làm nổi bật
           setProducts(result.data.slice(0, 4));
         }
+
+        const result = await response.json();
+        const activeProducts = result.data || [];
+
+        const featured = activeProducts.filter(
+          (p) => p.featured === true
+        );
+
+        const finalProducts =
+          featured.length > 0
+            ? featured.slice(0, 6)
+            : activeProducts.slice(0, 6);
+
+        setProducts(finalProducts);
       } catch (error) {
         console.error("Lỗi fetch sản phẩm:", error);
       } finally {
@@ -149,7 +163,7 @@ const HomePage = () => {
               Đang tải sản phẩm...
             </div>
           ) : (
-            <div style={styles.productGrid}>
+            <Row gutter={[24, 24]}>
               {products.map((item) => (
                 <div key={item._id} style={styles.productCard}>
                   <div style={styles.imgBox}>
@@ -179,8 +193,51 @@ const HomePage = () => {
                   </div>
                 </div>
               ))}
-            </div>
+            </Row>
           )}
+        </div>
+      </section>
+
+      {/* ================= COMMITMENT SECTION ================= */}
+      <section style={{ padding: "70px 20px", background: "#f9fafb" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <Row gutter={[24, 24]} justify="center">
+            <Col xs={24} md={8} style={{ textAlign: "center" }}>
+              <SafetyOutlined
+                style={{ fontSize: 36, color: "#1890ff" }}
+              />
+              <h3 style={{ marginTop: 16, fontWeight: 600 }}>
+                Hàng chính hãng
+              </h3>
+              <p style={{ color: "#6b7280" }}>
+                Cam kết 100% hàng chính hãng
+              </p>
+            </Col>
+
+            <Col xs={24} md={8} style={{ textAlign: "center" }}>
+              <CustomerServiceOutlined
+                style={{ fontSize: 36, color: "#1890ff" }}
+              />
+              <h3 style={{ marginTop: 16, fontWeight: 600 }}>
+                Hỗ trợ 24/7
+              </h3>
+              <p style={{ color: "#6b7280" }}>
+                Tư vấn kỹ thuật miễn phí
+              </p>
+            </Col>
+
+            <Col xs={24} md={8} style={{ textAlign: "center" }}>
+              <VerifiedOutlined
+                style={{ fontSize: 36, color: "#1890ff" }}
+              />
+              <h3 style={{ marginTop: 16, fontWeight: 600 }}>
+                Bảo hành dài hạn
+              </h3>
+              <p style={{ color: "#6b7280" }}>
+                Bảo hành từ 6–24 tháng
+              </p>
+            </Col>
+          </Row>
         </div>
       </section>
     </div>

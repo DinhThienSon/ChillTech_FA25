@@ -20,12 +20,21 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "Tài khoản không tồn tại" });
     }
 
+    // 🔥 ADMIN → KHÔNG CHECK CUSTOMER
+    if (account.role === "ADMIN") {
+      req.user = {
+        accountId: account._id,
+        role: account.role,
+      };
+      return next();
+    }
+
+    // 🔥 CUSTOMER → BẮT BUỘC CÓ CUSTOMER
     const customer = await Customer.findOne({ account: account._id }).lean();
     if (!customer) {
       return res.status(401).json({ message: "Customer không tồn tại" });
     }
 
-    // 🔥 GÁN USER CHO REQUEST
     req.user = {
       accountId: account._id,
       customerId: customer._id,

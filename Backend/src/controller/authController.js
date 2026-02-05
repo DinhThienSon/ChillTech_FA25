@@ -53,7 +53,11 @@ const me = async (req, res) => {
       return res.status(401).json({ message: "Chưa đăng nhập" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "secret_key"
+    );
+
     const account = await Account.findById(decoded.id).lean();
     const customer = await Customer.findOne({ account: account._id }).lean();
 
@@ -62,9 +66,12 @@ const me = async (req, res) => {
         id: account._id,
         email: account.email,
         role: account.role,
+        phone: account.phone,          // ✅ THÊM
       },
       customer: {
         customerName: customer?.customerName,
+        address: customer?.address,    // ✅ THÊM
+        gender: customer?.gender,
       },
     });
   } catch (error) {
@@ -72,6 +79,7 @@ const me = async (req, res) => {
     return res.status(401).json({ message: "Token không hợp lệ" });
   }
 };
+
 
 module.exports = {
   login,

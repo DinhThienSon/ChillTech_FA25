@@ -15,10 +15,12 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
 
-   
+      // ✅ MAP RÕ RÀNG – KHÔNG GHI ĐÈ ROLE
       setUser({
-        ...res.data.account,     
-        ...res.data.customer,    
+        id: res.data.account.id,
+        email: res.data.account.email,
+        role: res.data.account.role, // 👈 QUAN TRỌNG
+        customerName: res.data.customer?.customerName || null,
       });
     } catch (error) {
       setUser(null);
