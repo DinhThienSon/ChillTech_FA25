@@ -7,6 +7,7 @@ import {
   Col,
   Space,
   message,
+  Dropdown,
 } from "antd";
 import {
   PhoneOutlined,
@@ -30,7 +31,6 @@ const AppHeader = () => {
   const { totalItems } = useCart();
   const navigate = useNavigate();
 
-  // ===== LOGOUT =====
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -46,9 +46,31 @@ const AppHeader = () => {
     }
   };
 
+  // ✅ AntD v5 dropdown menu
+  const userMenuItems = [
+    {
+      key: "profile",
+      label: "Hồ sơ cá nhân",
+      onClick: () => navigate("/account/profile"),
+    },
+    {
+      key: "orders",
+      label: "Đơn hàng của tôi",
+      onClick: () => navigate("/account/orders"),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      label: "Đăng xuất",
+      onClick: handleLogout,
+    },
+  ];
+
   return (
     <>
-      {/* ===== TOP BAR ===== */}
+      {/* TOP BAR */}
       <div style={{ background: "#003a5d", color: "#fff", fontSize: 13 }}>
         <Row
           justify="space-between"
@@ -72,25 +94,12 @@ const AppHeader = () => {
 
           <Col>
             {user ? (
-              <Space size="middle">
-                <Space style={{ color: "#fff" }}>
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                <Space style={{ color: "#fff", cursor: "pointer" }}>
                   <UserOutlined />
                   Xin chào, {user.customerName}
                 </Space>
-
-                <span style={{ color: "#fff" }}>|</span>
-
-                <span
-                  onClick={handleLogout}
-                  style={{
-                    color: "#fff",
-                    cursor: "pointer",
-                    fontWeight: 500,
-                  }}
-                >
-                  Đăng xuất
-                </span>
-              </Space>
+              </Dropdown>
             ) : (
               <Space>
                 <Link to="/login" style={{ color: "#fff" }}>
@@ -106,7 +115,7 @@ const AppHeader = () => {
         </Row>
       </div>
 
-      {/* ===== MAIN HEADER ===== */}
+      {/* MAIN HEADER */}
       <Header
         style={{
           background: "#fff",
@@ -123,7 +132,6 @@ const AppHeader = () => {
             padding: "0 24px",
           }}
         >
-          {/* LOGO */}
           <Col>
             <Link
               to="/"
@@ -138,29 +146,18 @@ const AppHeader = () => {
             </Link>
           </Col>
 
-          {/* MENU */}
           <Col flex="auto" style={{ paddingLeft: 40 }}>
             <Menu
               mode="horizontal"
               style={{ borderBottom: "none" }}
               items={[
-                {
-                  key: "home",
-                  label: <Link to="/">Trang chủ</Link>,
-                },
-                {
-                  key: "products",
-                  label: <Link to="/products">Sản phẩm</Link>,
-                },
-                {
-                  key: "about",
-                  label: <Link to="about"> Về chúng tôi</Link>,
-                },
+                { key: "home", label: <Link to="/">Trang chủ</Link> },
+                { key: "products", label: <Link to="/products">Sản phẩm</Link> },
+                { key: "about", label: <Link to="/about">Về chúng tôi</Link> },
               ]}
             />
           </Col>
 
-          {/* SEARCH + CART */}
           <Col>
             <Space size="large">
               <Search
@@ -178,7 +175,7 @@ const AppHeader = () => {
             </Space>
           </Col>
         </Row>
-      </Header >
+      </Header>
     </>
   );
 };
