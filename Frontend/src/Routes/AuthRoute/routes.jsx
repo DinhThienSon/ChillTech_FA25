@@ -5,7 +5,16 @@ import RegisterPage from "../../Page/Customer/RegisterPage";
 import ProductDetail from "../../Page/Customer/ProductDetail";
 import Cart from "../../Page/Customer/Cart";
 import About from "../../Page/Customer/AboutUs";
-
+import CheckOut from "../../Page/Customer/Checkout";
+import Paid from "../../Page/Customer/Paid";
+import AdminDashboard from "../../Page/Admin/AdminDashboard";
+import ProductManage from "../../Page/Admin/ProductManage";
+import AddProduct from "../../Page/Admin/AddProduct";
+import EditProduct from "../../Page/Admin/EditProduct";
+import OrderManage from "../../Page/Admin/OrderManage";
+import AdminViewOrderdetail from "../../Page/Admin/AdminViewOrderdetail";
+import CustomerManage from "../../Page/Admin/CustomerManage";
+import AdminCustomerDetail from "../../Page/Admin/AdminCustomerDetail";
 export const publicRoutes = [
   {
     path: "/",
@@ -41,8 +50,48 @@ export const customerRoutes = [
     path: "/cart",
     element: <Cart />,
   },
+  {
+    path: "/checkout",
+    element: <CheckOut />,
+  },
+  {
+    path: "/payment/:orderId",
+    element: <Paid />,
+  },
 ];
 
 export const adminRoutes = [
-  
+  {
+    path: "/admin",
+    element: <AdminDashboard />,
+  },
+  {
+    path: "/admin/products",
+    element: <ProductManage />,
+  },
+  {
+    path: "/admin/products/add",
+    element: <AddProduct />,
+  },
+  {
+    path: "/admin/products/edit/:id",
+    element: <EditProduct />,
+  },
+  {
+    path: "/admin/orders",
+    element: <OrderManage />,
+  },
+  {
+    path: "/admin/orders/:id",
+    element: <AdminViewOrderdetail />,
+  },
+  {
+    path: "/admin/customers",
+    element: <CustomerManage />,
+  },
+  {
+    path: "/admin/customers/:id",
+    element: <AdminCustomerDetail />,
+  },
+
 ];

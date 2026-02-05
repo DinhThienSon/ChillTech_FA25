@@ -39,7 +39,7 @@ const ProductList = () => {
     // =============================
     useEffect(() => {
         const fetchProducts = async () => {
-            const res = await axios.get(`${API_URL}/api/products`);
+            const res = await axios.get(`${API_URL}/api/products/public`);
             const data = res.data.data || [];
 
             setAllProducts(data);

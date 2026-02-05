@@ -35,7 +35,7 @@ const AppFooter = () => {
             làm lạnh.
           </p>
           <Space size="middle">
-            <FacebookFilled style={{ fontSize: 20 }} />
+           <a href="https://www.facebook.com/chilltechvn"><FacebookFilled style={{ fontSize: 20 }} /></a>
             <MailOutlined style={{ fontSize: 20 }} />
           </Space>
         </Col>

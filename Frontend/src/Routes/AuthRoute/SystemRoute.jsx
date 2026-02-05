@@ -10,37 +10,41 @@ import GuestRoute from "./GuestRoute";
 import CustomerRoute from "./CustomerRoute";
 import AdminRoute from "./AdminRoute";
 
+import CustomerLayout from "../../components/Layout/CustomerLayout";
+import AdminLayout from "../../components/AdminLayout/AdminLayout";
+
 import NotFoundPage from "../../Page/AuthenPage/NotFoundPage";
 import UnAuthorizedPage from "../../Page/AuthenPage/UnAuthorizedPage";
-
 
 const SystemRoute = () => {
   return (
     <Routes>
- 
-      {publicRoutes.map((route, idx) => (
-        <Route key={idx} path={route.path} element={route.element} />
-      ))}
-
-    
-      <Route element={<GuestRoute />}>
-        {guestRoutes.map((route, idx) => (
+      {/* ===== CUSTOMER LAYOUT ===== */}
+      <Route element={<CustomerLayout />}>
+        {publicRoutes.map((route, idx) => (
           <Route key={idx} path={route.path} element={route.element} />
         ))}
+
+        <Route element={<GuestRoute />}>
+          {guestRoutes.map((route, idx) => (
+            <Route key={idx} path={route.path} element={route.element} />
+          ))}
+        </Route>
+
+        <Route element={<CustomerRoute />}>
+          {customerRoutes.map((route, idx) => (
+            <Route key={idx} path={route.path} element={route.element} />
+          ))}
+        </Route>
       </Route>
 
-     
-      <Route element={<CustomerRoute />}>
-        {customerRoutes.map((route, idx) => (
-          <Route key={idx} path={route.path} element={route.element} />
-        ))}
-      </Route>
-
-
+      {/* ===== ADMIN LAYOUT ===== */}
       <Route element={<AdminRoute />}>
-        {adminRoutes.map((route, idx) => (
-          <Route key={idx} path={route.path} element={route.element} />
-        ))}
+        <Route element={<AdminLayout />}>
+          {adminRoutes.map((route, idx) => (
+            <Route key={idx} path={route.path} element={route.element} />
+          ))}
+        </Route>
       </Route>
 
       <Route path="/403" element={<UnAuthorizedPage />} />
