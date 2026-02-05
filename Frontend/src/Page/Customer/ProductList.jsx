@@ -6,13 +6,15 @@ import {
     Input,
     Select,
     Button,
-    Rate,
     Tag,
     Empty,
+    Slider,
+    Divider,
 } from "antd";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../../Routes/Context/CartContext";
+
 const { Search } = Input;
 const { Option } = Select;
 
@@ -34,6 +36,10 @@ const ProductList = () => {
     const [sort, setSort] = useState("default");
     const [category, setCategory] = useState("ALL");
 
+    // 🔥 PRICE FILTER
+    const [priceRange, setPriceRange] = useState([0, 0]);
+    const [maxPrice, setMaxPrice] = useState(0);
+
     // =============================
     // 📥 LOAD PRODUCTS + CATEGORY
     // =============================
@@ -45,11 +51,20 @@ const ProductList = () => {
             setAllProducts(data);
             setFilteredProducts(data);
 
-            // 🔥 LẤY CATEGORY TỪ DB
+            // CATEGORY
             const uniqueCategories = [
                 ...new Set(data.map((p) => p.category).filter(Boolean)),
             ];
             setCategories(uniqueCategories);
+
+            // PRICE RANGE
+            const prices = data
+                .map((p) => p.price)
+                .filter((p) => typeof p === "number");
+
+            const max = prices.length ? Math.max(...prices) : 0;
+            setMaxPrice(max);
+            setPriceRange([0, max]);
         };
 
         fetchProducts();
@@ -74,9 +89,17 @@ const ProductList = () => {
                 (p) =>
                     p.category &&
                     p.category.trim().toLowerCase() ===
-                    category.trim().toLowerCase()
+                        category.trim().toLowerCase()
             );
         }
+
+        // PRICE
+        data = data.filter(
+            (p) =>
+                typeof p.price === "number" &&
+                p.price >= priceRange[0] &&
+                p.price <= priceRange[1]
+        );
 
         // SORT
         if (sort === "price_asc") {
@@ -87,7 +110,7 @@ const ProductList = () => {
         }
 
         setFilteredProducts(data);
-    }, [search, sort, category, allProducts]);
+    }, [search, sort, category, priceRange, allProducts]);
 
     return (
         <div style={{ padding: 24, maxWidth: 1440, margin: "0 auto" }}>
@@ -118,7 +141,7 @@ const ProductList = () => {
             </Row>
 
             <Row gutter={[24, 24]}>
-                {/* ===== CATEGORY FILTER ===== */}
+                {/* ===== FILTER SIDEBAR ===== */}
                 <Col span={5}>
                     <Card title="Danh mục">
                         <Button
@@ -139,6 +162,32 @@ const ProductList = () => {
                                 {cat}
                             </Button>
                         ))}
+
+                        <Divider />
+
+                        {/* ===== PRICE FILTER ===== */}
+                        <h4>Lọc theo giá</h4>
+                        <Slider
+                            range
+                            min={0}
+                            max={maxPrice}
+                            value={priceRange}
+                            onChange={setPriceRange}
+                            tooltip={{
+                                formatter: (value) =>
+                                    value.toLocaleString() + "₫",
+                            }}
+                        />
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                fontSize: 13,
+                            }}
+                        >
+                            <span>{priceRange[0].toLocaleString()}₫</span>
+                            <span>{priceRange[1].toLocaleString()}₫</span>
+                        </div>
                     </Card>
                 </Col>
 
@@ -154,19 +203,29 @@ const ProductList = () => {
                                         hoverable
                                         cover={
                                             <Link to={`/products/${item._id}`}>
-                                                <img
-                                                    alt={item.productName}
-                                                    src={
-                                                        item.imageUrl
-                                                            ? `${API_URL}${item.imageUrl}`
-                                                            : "/no-image.png"
-                                                    }
-
+                                                <div
                                                     style={{
-                                                        height: 200,
-                                                        objectFit: "cover",
+                                                        height: 220,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        background: "#fff",
                                                     }}
-                                                />
+                                                >
+                                                    <img
+                                                        alt={item.productName}
+                                                        src={
+                                                            item.imageUrl
+                                                                ? `${API_URL}${item.imageUrl}`
+                                                                : "/no-image.png"
+                                                        }
+                                                        style={{
+                                                            maxHeight: "100%",
+                                                            maxWidth: "100%",
+                                                            objectFit: "contain",
+                                                        }}
+                                                    />
+                                                </div>
                                             </Link>
                                         }
                                     >
@@ -190,7 +249,8 @@ const ProductList = () => {
 
                                         <h3 style={{ color: "#003a5c" }}>
                                             {item.price
-                                                ? item.price.toLocaleString() + "₫"
+                                                ? item.price.toLocaleString() +
+                                                  "₫"
                                                 : "Liên hệ"}
                                         </h3>
 
@@ -199,11 +259,12 @@ const ProductList = () => {
                                         <Button
                                             type="primary"
                                             block
-                                            onClick={() => addToCart(item, 1)}
+                                            onClick={() =>
+                                                addToCart(item, 1)
+                                            }
                                         >
                                             Thêm vào giỏ
                                         </Button>
-
                                     </Card>
                                 </Col>
                             ))}

@@ -109,10 +109,44 @@ const getCustomerDetailForAdmin = async (customerId) => {
     isVIP: totalSpent >= 20000000,
   };
 };
+const updateMyProfile = async (accountId, data) => {
+  const { customerName, phone, address, gender } = data;
 
+  const account = await Account.findById(accountId);
+  if (!account) throw new Error("Account not found");
+
+  const customer = await Customer.findOne({ account: accountId });
+  if (!customer) throw new Error("Customer not found");
+
+  // Update account
+  if (phone !== undefined) {
+    account.phone = phone;
+    await account.save();
+  }
+
+  // Update customer
+  customer.customerName = customerName ?? customer.customerName;
+  customer.address = address ?? customer.address;
+  customer.gender = gender ?? customer.gender;
+
+  await customer.save();
+
+  return {
+    account: {
+      email: account.email,
+      phone: account.phone,
+    },
+    customer: {
+      customerName: customer.customerName,
+      address: customer.address,
+      gender: customer.gender,
+    },
+  };
+};
 
 module.exports = {
   createUser,
   getCustomersForAdmin,
-  getCustomerDetailForAdmin
+  getCustomerDetailForAdmin,
+  updateMyProfile,
 };

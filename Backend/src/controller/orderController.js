@@ -1,8 +1,9 @@
 const orderService = require("../service/orderService");
 
+/* ================= ADMIN ================= */
+
 const getAdminOrders = async (req, res) => {
   try {
-    // 🔒 Chỉ ADMIN
     if (req.user.role !== "ADMIN") {
       return res.status(403).json({ message: "Không có quyền truy cập" });
     }
@@ -18,9 +19,9 @@ const getAdminOrders = async (req, res) => {
     return res.status(500).json({ message: "Lỗi server" });
   }
 };
+
 const updateOrderStatus = async (req, res) => {
   try {
-    // 🔒 Chỉ ADMIN
     if (req.user.role !== "ADMIN") {
       return res.status(403).json({ message: "Không có quyền thao tác" });
     }
@@ -43,8 +44,8 @@ const updateOrderStatus = async (req, res) => {
       message: error.message || "Không thể cập nhật trạng thái đơn hàng",
     });
   }
-  
 };
+
 const getAdminOrderById = async (req, res) => {
   try {
     if (req.user.role !== "ADMIN") {
@@ -67,9 +68,63 @@ const getAdminOrderById = async (req, res) => {
     return res.status(500).json({ message: "Lỗi server" });
   }
 };
+
+/* ================= CUSTOMER ================= */
+
+const getMyOrders = async (req, res) => {
+  try {
+    const customerId = req.user.customerId;
+    if (!customerId) {
+      return res.status(400).json({
+        message: "Không tìm thấy customerId từ token",
+      });
+    }
+
+    const orders = await orderService.getMyOrders(customerId);
+    return res.json({ data: orders });
+  } catch (error) {
+    console.error("GET MY ORDERS ERROR:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * ✅ CUSTOMER xác nhận đã giao
+ * CHỈ khi trạng thái hiện tại = "Đang giao hàng"
+ */
+const confirmDeliveredByCustomer = async (req, res) => {
+  try {
+    const customerId = req.user.customerId;
+    const { orderId } = req.params;
+
+    if (!customerId) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+
+    const order =
+      await orderService.confirmOrderDeliveredByCustomer(
+        orderId,
+        customerId
+      );
+
+    return res.json({
+      message: "Xác nhận đã giao hàng thành công",
+      data: order,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
+  // admin
   getAdminOrders,
   updateOrderStatus,
-  getAdminOrderById
-  
+  getAdminOrderById,
+
+  // customer
+  getMyOrders,
+  confirmDeliveredByCustomer,
 };

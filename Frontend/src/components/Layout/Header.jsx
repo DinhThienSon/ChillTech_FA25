@@ -73,7 +73,15 @@ const AppHeader = () => {
           <Col>
             {user ? (
               <Space size="middle">
-                <Space style={{ color: "#fff" }}>
+                {/* 👇 CLICK VÀO TÊN → PROFILE */}
+                <Space
+                  style={{
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                  }}
+                  onClick={() => navigate("/profile")}
+                >
                   <UserOutlined />
                   Xin chào, {user.customerName}
                 </Space>
@@ -154,7 +162,7 @@ const AppHeader = () => {
                 },
                 {
                   key: "about",
-                  label: <Link to="about"> Về chúng tôi</Link>,
+                  label: <Link to="/about">Về chúng tôi</Link>,
                 },
               ]}
             />
@@ -178,7 +186,7 @@ const AppHeader = () => {
             </Space>
           </Col>
         </Row>
-      </Header >
+      </Header>
     </>
   );
 };

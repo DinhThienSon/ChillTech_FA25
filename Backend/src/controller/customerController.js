@@ -74,8 +74,40 @@ const getAdminCustomerDetail = async (req, res) => {
     return res.status(400).json({ message: error.message });
   }
 };
+
+const updateMyProfile = async (req, res) => {
+  try {
+   const accountId = req.user.accountId;// từ authMiddleware
+
+    const {
+      customerName,
+      phone,
+      address,
+      gender,
+    } = req.body;
+
+    const data = await customerService.updateMyProfile(
+      accountId,
+      {
+        customerName,
+        phone,
+        address,
+        gender,
+      }
+    );
+
+    return res.json({
+      message: "Cập nhật thông tin thành công",
+      data,
+    });
+  } catch (error) {
+    console.error("UPDATE PROFILE ERROR:", error);
+    return res.status(400).json({ message: error.message });
+  }
+};
 module.exports = {
   handleRegisterCustomer,
   getAdminCustomers,
-  getAdminCustomerDetail
+  getAdminCustomerDetail,
+  updateMyProfile
 };

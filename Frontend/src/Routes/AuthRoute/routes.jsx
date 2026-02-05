@@ -15,6 +15,8 @@ import OrderManage from "../../Page/Admin/OrderManage";
 import AdminViewOrderdetail from "../../Page/Admin/AdminViewOrderdetail";
 import CustomerManage from "../../Page/Admin/CustomerManage";
 import AdminCustomerDetail from "../../Page/Admin/AdminCustomerDetail";
+import CustomerProfile from "../../Page/Customer/CustomerProfile";
+import CustomerOrerList from "../../Page/Customer/CustomerOrerList";
 export const publicRoutes = [
   {
     path: "/",
@@ -58,6 +60,15 @@ export const customerRoutes = [
     path: "/payment/:orderId",
     element: <Paid />,
   },
+  {
+    path: "/profile",
+    element: <CustomerProfile />,
+  },
+  {
+    path: "/customer-orders",
+    element: <CustomerOrerList />,
+  },
+
 ];
 
 export const adminRoutes = [

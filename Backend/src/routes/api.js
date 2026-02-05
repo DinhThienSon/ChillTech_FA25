@@ -8,6 +8,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const uploadProductImage = require("../middleware/uploadProductImage");
 const orderController = require("../controller/orderController");
 const dashboardController = require("../controller/dashboardController");
+
 const router = express.Router();
 
 const initAPIRoutes = (app) => {
@@ -18,21 +19,14 @@ const initAPIRoutes = (app) => {
   router.get("/auth/me", authController.me);
 
   /* ===== PRODUCTS – USER ===== */
-  router.get(
-    "/products/public",
-    productController.getPublicProducts
-  );
+  router.get("/products/public", productController.getPublicProducts);
+  router.get("/products/:id", productController.getProductById);
 
   /* ===== PRODUCTS – ADMIN ===== */
   router.get(
     "/admin/products",
     authMiddleware,
     productController.getAdminProducts
-  );
-
-  router.get(
-    "/products/:id",
-    productController.getProductById
   );
 
   router.post(
@@ -68,53 +62,84 @@ const initAPIRoutes = (app) => {
     authMiddleware,
     checkoutController.confirmCheckout
   );
+
+  /* =====================================================
+     🔥 ORDERS – CUSTOMER (THỨ TỰ RẤT QUAN TRỌNG)
+     ===================================================== */
+
+  // ✅ PHẢI ĐẶT TRƯỚC /orders/:orderId
+  router.get(
+    "/orders/me",
+    authMiddleware,
+    orderController.getMyOrders
+  );
+
   router.get(
     "/orders/:orderId",
     authMiddleware,
     checkoutController.getOrderById
   );
+
   router.put(
     "/orders/:orderId/processing",
     authMiddleware,
     checkoutController.markOrderProcessing
   );
 
+  /* ===== ORDERS – ADMIN ===== */
   router.get(
-  "/admin/orders",
-  authMiddleware,
-  orderController.getAdminOrders
-);
+    "/admin/orders",
+    authMiddleware,
+    orderController.getAdminOrders
+  );
 
-router.put(
-  "/admin/orders/:orderId/status",
-  authMiddleware,
-  orderController.updateOrderStatus
-);
+  router.put(
+    "/admin/orders/:orderId/status",
+    authMiddleware,
+    orderController.updateOrderStatus
+  );
 
-router.get(
-  "/admin/orders/:orderId",
-  authMiddleware,
-  orderController.getAdminOrderById
-);
-router.get(
-  "/admin/customers",
-  authMiddleware,
-  customerController.getAdminCustomers
-);
+  router.get(
+    "/admin/orders/:orderId",
+    authMiddleware,
+    orderController.getAdminOrderById
+  );
 
-router.get(
-  "/admin/customers/:id",
-  authMiddleware,
-  customerController.getAdminCustomerDetail
-);
-router.get(
-  "/admin/dashboard",
-  authMiddleware,
-  dashboardController.getDashboard
-);
+  /* ===== CUSTOMERS – ADMIN ===== */
+  router.get(
+    "/admin/customers",
+    authMiddleware,
+    customerController.getAdminCustomers
+  );
 
+  router.get(
+    "/admin/customers/:id",
+    authMiddleware,
+    customerController.getAdminCustomerDetail
+  );
+
+  /* ===== CUSTOMER PROFILE ===== */
+  router.put(
+    "/customers/me",
+    authMiddleware,
+    customerController.updateMyProfile
+  );
+
+  /* ===== DASHBOARD ===== */
+  router.get(
+    "/admin/dashboard",
+    authMiddleware,
+    dashboardController.getDashboard
+  );
 
   return app.use("/api", router);
 };
+
+router.patch(
+  "/orders/:orderId/confirm-delivered",
+  authMiddleware,
+  orderController.confirmDeliveredByCustomer
+);
+
 
 module.exports = { initAPIRoutes };
