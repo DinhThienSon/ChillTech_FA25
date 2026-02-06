@@ -16,14 +16,18 @@ export const AuthProvider = ({ children }) => {
       );
 
       // ✅ MAP RÕ RÀNG – KHÔNG GHI ĐÈ ROLE
-      setUser({
+      const mapped = {
         id: res.data.account.id,
         email: res.data.account.email,
         role: res.data.account.role, // 👈 QUAN TRỌNG
         customerName: res.data.customer?.customerName || null,
-      });
+      };
+
+      setUser(mapped);
+      return mapped;
     } catch (error) {
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
