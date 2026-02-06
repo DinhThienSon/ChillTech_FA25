@@ -17,6 +17,7 @@ import CustomerManage from "../../Page/Admin/CustomerManage";
 import AdminCustomerDetail from "../../Page/Admin/AdminCustomerDetail";
 import CustomerProfile from "../../Page/Customer/CustomerProfile";
 import CustomerOrerList from "../../Page/Customer/CustomerOrerList";
+import AdminBanner from "../../Page/Admin/AdminBanner";
 export const publicRoutes = [
   {
     path: "/",
@@ -104,5 +105,9 @@ export const adminRoutes = [
     path: "/admin/customers/:id",
     element: <AdminCustomerDetail />,
   },
-
+  
+  {
+    path: "/admin/banners",
+    element: <AdminBanner />,
+  },
 ];

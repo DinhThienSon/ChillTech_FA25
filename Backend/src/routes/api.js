@@ -8,7 +8,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 const uploadProductImage = require("../middleware/uploadProductImage");
 const orderController = require("../controller/orderController");
 const dashboardController = require("../controller/dashboardController");
-
+const bannerController = require("../controller/bannerController")
+const adminBannerRoute = require("./adminBanner");
 const router = express.Router();
 
 const initAPIRoutes = (app) => {
@@ -124,6 +125,10 @@ const initAPIRoutes = (app) => {
     authMiddleware,
     customerController.updateMyProfile
   );
+
+ /* ===== BANNERS – PUBLIC ===== */
+  router.get("/banners", bannerController.getPublicBanners);
+  router.use("/admin", adminBannerRoute);
 
   /* ===== DASHBOARD ===== */
   router.get(

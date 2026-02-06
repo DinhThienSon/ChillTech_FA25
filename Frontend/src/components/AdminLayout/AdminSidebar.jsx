@@ -79,6 +79,14 @@ const AdminSidebar = () => {
             icon: <TagsOutlined />,
             label: "Danh mục",
           },
+
+          // ✅ CHỈ THÊM MỤC NÀY
+          {
+            key: "/admin/banners",
+            icon: <TagsOutlined />,
+            label: "Banner",
+          },
+
           {
             key: "/admin/reports",
             icon: <BarChartOutlined />,

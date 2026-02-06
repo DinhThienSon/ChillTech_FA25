@@ -4,16 +4,23 @@ const Customer = require("../models/Customer");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.cookies.access_token;
+    // ✅ Support BOTH:
+    // 1) Cookie: req.cookies.access_token
+    // 2) Header: Authorization: Bearer <token>
+    let token = req.cookies?.access_token;
+
+    if (!token) {
+      const authHeader = req.headers?.authorization || req.headers?.Authorization;
+      if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice(7).trim();
+      }
+    }
 
     if (!token) {
       return res.status(401).json({ message: "Chưa đăng nhập" });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "secret_key"
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
 
     const account = await Account.findById(decoded.id).lean();
     if (!account) {
@@ -21,10 +28,10 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // 🔥 ADMIN → KHÔNG CHECK CUSTOMER
-    if (account.role === "ADMIN") {
+    if ((account.role || "").toUpperCase() === "ADMIN") {
       req.user = {
         accountId: account._id,
-        role: account.role,
+        role: account.role, // "ADMIN"
       };
       return next();
     }

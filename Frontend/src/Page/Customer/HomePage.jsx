@@ -7,12 +7,16 @@ import {
   VerifiedOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import FeaturedBanner from "../../components/FeaturedBanner/FeaturedBanner";
 
 const API_URL = "http://localhost:9999";
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // banners (from DB)
+  const [homeBanners, setHomeBanners] = useState([]);
 
   // =============================
   // 📥 FETCH FEATURED PRODUCTS
@@ -51,8 +55,49 @@ const HomePage = () => {
     fetchHomeData();
   }, []);
 
+// =============================
+// 📥 FETCH HOME BANNERS (PUBLIC)
+// =============================
+useEffect(() => {
+  const fetchHomeBanners = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/banners?page=home`);
+      if (!res.ok) return;
+
+      const result = await res.json();
+      const list = result.data || [];
+
+      const mapped = list.map((b) => ({
+        id: b._id,
+        title: b.title,
+        subtitle: b.subtitle,
+        glowText: b.glowText,
+        ctaText: b.ctaText,
+        href: b.ctaLink,
+        imageUrl: b.imageUrl,
+        bgColor: b.bgValue,
+      }));
+
+      setHomeBanners(mapped);
+    } catch (e) {
+      console.error("Lỗi fetch banner:", e);
+    }
+  };
+
+  fetchHomeBanners();
+}, []);
+
+
   return (
     <div style={{ fontFamily: "Segoe UI, sans-serif", color: "#0b1c36" }}>
+      {/* ================= FEATURED BANNER (from DB) ================= */}
+      {homeBanners.length > 0 && (
+        <section style={{ padding: "16px 20px", background: "#fff" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <FeaturedBanner items={homeBanners} height={320} />
+          </div>
+        </section>
+      )}
       {/* ================= HERO ================= */}
       <section
         style={{
