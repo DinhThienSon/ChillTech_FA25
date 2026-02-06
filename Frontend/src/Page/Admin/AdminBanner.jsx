@@ -62,7 +62,6 @@ const AdminBanner = () => {
 
   const buildBgValue = (mode, solid, g1, g2) => {
     if (mode === "solid") return solid;
-    // bạn có thể đổi sang linear-gradient nếu muốn
     return `radial-gradient(circle at 30% 40%, ${g1} 0%, #0b1220 45%, ${g2} 100%)`;
   };
 
@@ -91,8 +90,8 @@ const AdminBanner = () => {
     setEditing(null);
     form.resetFields();
 
-    // set defaults
     form.setFieldsValue({
+      imageOnly: false,
       title: "",
       subtitle: "",
       ctaText: "XEM NGAY",
@@ -105,7 +104,6 @@ const AdminBanner = () => {
       active: true,
     });
 
-    // reset pickers
     setImageMode("link");
     setBgMode("gradient");
     setBgSolid("#0b1220");
@@ -121,6 +119,7 @@ const AdminBanner = () => {
     form.resetFields();
 
     form.setFieldsValue({
+      imageOnly: !!record.imageOnly,
       title: record.title,
       subtitle: record.subtitle,
       ctaText: record.ctaText,
@@ -133,11 +132,9 @@ const AdminBanner = () => {
       active: !!record.active,
     });
 
-    // image mode: nếu imageUrl là link http thì default "link"
     const url = record.imageUrl || "";
-    setImageMode(url.startsWith("http") ? "link" : "link");
+    setImageMode(url ? "link" : "link");
 
-    // bgMode default gradient (người dùng chỉnh lại bằng picker)
     setBgMode("gradient");
     setBgSolid("#0b1220");
     setBgG1("#1d4ed8");
@@ -150,22 +147,32 @@ const AdminBanner = () => {
     try {
       const values = await form.validateFields();
 
+      // ✅ validate theo chế độ banner
       if (!values.imageUrl) {
         message.error("Vui lòng chọn/nhập imageUrl");
         return;
       }
-      if (!values.title?.trim()) {
+      if (!values.imageOnly && !values.title?.trim()) {
         message.error("Vui lòng nhập tiêu đề");
         return;
       }
 
-      setLoading(true);
+      // Nếu chọn "Chỉ dùng ảnh" thì không bắt buộc các field text
+      const payload = {
+        ...values,
+        title: values.imageOnly ? (values.title || "") : values.title,
+        subtitle: values.imageOnly ? (values.subtitle || "") : values.subtitle,
+        ctaText: values.imageOnly ? (values.ctaText || "") : values.ctaText,
+        glowText: values.imageOnly ? (values.glowText || "") : values.glowText,
+        bgValue: values.imageOnly ? (values.bgValue || DEFAULT_BG) : values.bgValue,
+      };
 
+      setLoading(true);
       if (editing?._id) {
-        await api.put(`/admin/banners/${editing._id}`, values);
+        await api.put(`/admin/banners/${editing._id}`, payload);
         message.success("Cập nhật banner thành công");
       } else {
-        await api.post("/admin/banners", values);
+        await api.post("/admin/banners", payload);
         message.success("Tạo banner thành công");
       }
 
@@ -184,7 +191,7 @@ const AdminBanner = () => {
   const onDelete = async (record) => {
     Modal.confirm({
       title: "Xoá banner?",
-      content: `Bạn chắc chắn muốn xoá banner "${record.title}"?`,
+      content: `Bạn chắc chắn muốn xoá banner "${record.title || record._id}"?`,
       okText: "Xoá",
       okButtonProps: { danger: true },
       cancelText: "Huỷ",
@@ -232,7 +239,7 @@ const AdminBanner = () => {
       const formData = new FormData();
       formData.append("image", file);
 
-      // ✅ TODO: nếu endpoint upload của bạn khác, đổi tại đây
+      // ✅ nếu endpoint upload của bạn khác, đổi tại đây
       const res = await api.post("/admin/products/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -279,11 +286,25 @@ const AdminBanner = () => {
         onFilter: (value, record) => record.page === value,
       },
       {
+        title: "Kiểu",
+        dataIndex: "imageOnly",
+        width: 110,
+        render: (v) => (
+          <Tag color={v ? "gold" : "green"}>{v ? "Chỉ ảnh" : "Có chữ"}</Tag>
+        ),
+        filters: [
+          { text: "Có chữ", value: "text" },
+          { text: "Chỉ ảnh", value: "image" },
+        ],
+        onFilter: (value, record) =>
+          value === "image" ? !!record.imageOnly : !record.imageOnly,
+      },
+      {
         title: "Tiêu đề",
         dataIndex: "title",
         render: (v, r) => (
           <div>
-            <div style={{ fontWeight: 700 }}>{v}</div>
+            <div style={{ fontWeight: 700 }}>{v || "(Chỉ ảnh)"}</div>
             {r.subtitle ? (
               <div style={{ color: "#6b7280", fontSize: 12 }}>{r.subtitle}</div>
             ) : null}
@@ -340,6 +361,7 @@ const AdminBanner = () => {
         ),
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [banners]
   );
 
@@ -348,6 +370,8 @@ const AdminBanner = () => {
   const watchedSubtitle = Form.useWatch("subtitle", form);
   const watchedCtaText = Form.useWatch("ctaText", form);
   const watchedGlowText = Form.useWatch("glowText", form);
+  const watchedImageOnly = Form.useWatch("imageOnly", form);
+  const watchedImageUrl = Form.useWatch("imageUrl", form);
 
   return (
     <div style={{ padding: 20 }}>
@@ -402,55 +426,177 @@ const AdminBanner = () => {
           <Row gutter={[12, 12]}>
             <Col xs={24} md={16}>
               <Form.Item
-                label="Tiêu đề"
-                name="title"
-                rules={[{ required: true, message: "Nhập tiêu đề" }]}
+                label="Chế độ banner"
+                name="imageOnly"
+                valuePropName="checked"
               >
+                <Switch
+                  checkedChildren="Chỉ dùng ảnh"
+                  unCheckedChildren="Có chữ"
+                />
+              </Form.Item>
+
+              <Form.Item label="Tiêu đề" name="title">
                 <Input placeholder="VD: Linh kiện điện lạnh chính hãng..." />
               </Form.Item>
 
-              <Form.Item label="Phụ đề" name="subtitle">
-                <Input placeholder="VD: Ưu đãi hôm nay / Sản phẩm nổi bật..." />
-              </Form.Item>
+              {!watchedImageOnly ? (
+                <>
+                  <Form.Item label="Phụ đề" name="subtitle">
+                    <Input placeholder="VD: Ưu đãi hôm nay / Sản phẩm nổi bật..." />
+                  </Form.Item>
 
-              <Row gutter={[12, 12]}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Chữ nút (CTA)" name="ctaText">
-                    <Input placeholder="XEM NGAY" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Link nút" name="ctaLink">
-                    <Input placeholder="/products" />
-                  </Form.Item>
-                </Col>
-              </Row>
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Chữ nút (CTA)" name="ctaText">
+                        <Input placeholder="XEM NGAY" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Link nút" name="ctaLink">
+                        <Input placeholder="/products" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
 
-              <Row gutter={[12, 12]}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Glow text" name="glowText">
-                    <Input placeholder="HOT / SALE / CHILL..." />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Trang hiển thị" name="page">
-                    <Select
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Glow text" name="glowText">
+                        <Input placeholder="HOT / SALE / CHILL..." />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Trang hiển thị" name="page">
+                        <Select
+                          options={[
+                            { value: "home", label: "Home" },
+                            { value: "products", label: "Products" },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Thứ tự (order)" name="order">
+                        <InputNumber min={0} style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item
+                        label="Bật/Tắt (active)"
+                        name="active"
+                        valuePropName="checked"
+                      >
+                        <Switch />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  {/* ✅ NỀN: PICKER */}
+                  <Form.Item label="Nền banner">
+                    <Radio.Group
+                      value={bgMode}
+                      onChange={(e) => {
+                        const mode = e.target.value;
+                        setBgMode(mode);
+                        syncBgValueToForm(mode, bgSolid, bgG1, bgG2);
+                      }}
                       options={[
-                        { value: "home", label: "Home" },
-                        { value: "products", label: "Products" },
+                        { label: "Màu đơn", value: "solid" },
+                        { label: "Gradient", value: "gradient" },
                       ]}
                     />
-                  </Form.Item>
-                </Col>
-              </Row>
 
-              <Row gutter={[12, 12]}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Thứ tự (order)" name="order">
-                    <InputNumber min={0} style={{ width: "100%" }} />
+                    <div style={{ marginTop: 12 }}>
+                      {bgMode === "solid" ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <ColorPicker
+                            value={bgSolid}
+                            onChange={(c) => {
+                              const hex = c.toHexString();
+                              setBgSolid(hex);
+                              syncBgValueToForm("solid", hex, bgG1, bgG2);
+                            }}
+                            showText
+                          />
+                          <span style={{ color: "#6b7280" }}>Chọn màu nền</span>
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 16,
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>
+                              Màu 1
+                            </div>
+                            <ColorPicker
+                              value={bgG1}
+                              onChange={(c) => {
+                                const hex = c.toHexString();
+                                setBgG1(hex);
+                                syncBgValueToForm("gradient", bgSolid, hex, bgG2);
+                              }}
+                              showText
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>
+                              Màu 2
+                            </div>
+                            <ColorPicker
+                              value={bgG2}
+                              onChange={(c) => {
+                                const hex = c.toHexString();
+                                setBgG2(hex);
+                                syncBgValueToForm("gradient", bgSolid, bgG1, hex);
+                              }}
+                              showText
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <Divider style={{ margin: "12px 0" }} />
+
+                    <Form.Item name="bgValue" noStyle>
+                      <Input type="hidden" />
+                    </Form.Item>
+
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      * Hệ thống tự tạo bgValue, bạn không cần gõ.
+                    </div>
                   </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
+                </>
+              ) : (
+                <>
+                  {/* Chỉ dùng ảnh: vẫn cho chọn trang + order + active */}
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Trang hiển thị" name="page">
+                        <Select
+                          options={[
+                            { value: "home", label: "Home" },
+                            { value: "products", label: "Products" },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Thứ tự (order)" name="order">
+                        <InputNumber min={0} style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
                   <Form.Item
                     label="Bật/Tắt (active)"
                     name="active"
@@ -458,95 +604,19 @@ const AdminBanner = () => {
                   >
                     <Switch />
                   </Form.Item>
-                </Col>
-              </Row>
 
-              {/* ✅ NỀN: PICKER */}
-              <Form.Item label="Nền banner">
-                <Radio.Group
-                  value={bgMode}
-                  onChange={(e) => {
-                    const mode = e.target.value;
-                    setBgMode(mode);
-                    syncBgValueToForm(mode, bgSolid, bgG1, bgG2);
-                  }}
-                  options={[
-                    { label: "Màu đơn", value: "solid" },
-                    { label: "Gradient", value: "gradient" },
-                  ]}
-                />
+                  <Form.Item label="Link khi bấm banner" name="ctaLink">
+                    <Input placeholder="/products" />
+                  </Form.Item>
 
-                <div style={{ marginTop: 12 }}>
-                  {bgMode === "solid" ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <ColorPicker
-                        value={bgSolid}
-                        onChange={(c) => {
-                          const hex = c.toHexString();
-                          setBgSolid(hex);
-                          syncBgValueToForm("solid", hex, bgG1, bgG2);
-                        }}
-                        showText
-                      />
-                      <span style={{ color: "#6b7280" }}>Chọn màu nền</span>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 16,
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>
-                          Màu 1
-                        </div>
-                        <ColorPicker
-                          value={bgG1}
-                          onChange={(c) => {
-                            const hex = c.toHexString();
-                            setBgG1(hex);
-                            syncBgValueToForm("gradient", bgSolid, hex, bgG2);
-                          }}
-                          showText
-                        />
-                      </div>
-
-                      <div>
-                        <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>
-                          Màu 2
-                        </div>
-                        <ColorPicker
-                          value={bgG2}
-                          onChange={(c) => {
-                            const hex = c.toHexString();
-                            setBgG2(hex);
-                            syncBgValueToForm("gradient", bgSolid, bgG1, hex);
-                          }}
-                          showText
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <Divider style={{ margin: "12px 0" }} />
-
-                {/* bgValue thật (ẩn) để submit */}
-                <Form.Item name="bgValue" noStyle>
-                  <Input type="hidden" />
-                </Form.Item>
-
-                <div style={{ fontSize: 12, color: "#6b7280" }}>
-                  * Hệ thống tự tạo bgValue, bạn không cần gõ.
-                </div>
-              </Form.Item>
+                  <Form.Item name="bgValue" noStyle>
+                    <Input type="hidden" />
+                  </Form.Item>
+                </>
+              )}
             </Col>
 
             <Col xs={24} md={8}>
-              {/* ✅ ẢNH: LINK hoặc UPLOAD */}
               <Card size="small" title="Hình ảnh" style={{ borderRadius: 12 }}>
                 <Radio.Group
                   value={imageMode}
@@ -573,7 +643,10 @@ const AdminBanner = () => {
                         name="imageUrl"
                         rules={[{ required: true, message: "Vui lòng upload ảnh" }]}
                       >
-                        <Input placeholder="/uploads/xxx.png (tự điền sau upload)" disabled />
+                        <Input
+                          placeholder="/uploads/xxx.png (tự điền sau upload)"
+                          disabled
+                        />
                       </Form.Item>
 
                       <Upload
@@ -601,7 +674,6 @@ const AdminBanner = () => {
                 </div>
               </Card>
 
-              {/* PREVIEW QUICK */}
               <Card
                 size="small"
                 title="Preview nhanh"
@@ -618,44 +690,66 @@ const AdminBanner = () => {
                     color: "#fff",
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 10,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      fontSize: 44,
-                      fontWeight: 900,
-                      color: "rgba(255,255,255,0.08)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {watchedGlowText || ""}
-                  </div>
-
-                  <div style={{ position: "relative", zIndex: 2 }}>
-                    <div style={{ fontSize: 12, opacity: 0.85 }}>
-                      {watchedSubtitle || ""}
-                    </div>
-                    <div style={{ fontWeight: 900, lineHeight: 1.1 }}>
-                      {watchedTitle || "Tiêu đề banner"}
-                    </div>
-                    <div style={{ marginTop: 8 }}>
-                      <span
+                  {watchedImageOnly && watchedImageUrl ? (
+                    <img
+                      src={
+                        watchedImageUrl.startsWith("http")
+                          ? watchedImageUrl
+                          : `http://localhost:9999${watchedImageUrl}`
+                      }
+                      alt="preview"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: 10,
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <div
                         style={{
-                          display: "inline-block",
-                          padding: "4px 10px",
-                          borderRadius: 999,
-                          border: "1px solid rgba(255,255,255,0.25)",
-                          background: "rgba(0,0,0,0.25)",
-                          fontWeight: 700,
-                          fontSize: 12,
+                          position: "absolute",
+                          left: 10,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: 44,
+                          fontWeight: 900,
+                          color: "rgba(255,255,255,0.08)",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {watchedCtaText || "XEM NGAY"} →
-                      </span>
-                    </div>
-                  </div>
+                        {watchedGlowText || ""}
+                      </div>
+
+                      <div style={{ position: "relative", zIndex: 2 }}>
+                        <div style={{ fontSize: 12, opacity: 0.85 }}>
+                          {watchedSubtitle || ""}
+                        </div>
+                        <div style={{ fontWeight: 900, lineHeight: 1.1 }}>
+                          {watchedTitle || "Tiêu đề banner"}
+                        </div>
+                        <div style={{ marginTop: 8 }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 10px",
+                              borderRadius: 999,
+                              border: "1px solid rgba(255,255,255,0.25)",
+                              background: "rgba(0,0,0,0.25)",
+                              fontWeight: 700,
+                              fontSize: 12,
+                            }}
+                          >
+                            {watchedCtaText || "XEM NGAY"} →
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </Card>
             </Col>
@@ -675,64 +769,14 @@ const AdminBanner = () => {
         width={980}
       >
         {previewItem ? (
-          <div
-            style={{
-              borderRadius: 16,
-              overflow: "hidden",
-              background: previewItem.bgValue || DEFAULT_BG,
-              padding: 24,
-              display: "grid",
-              gridTemplateColumns: "1.2fr 1fr",
-              alignItems: "center",
-              gap: 20,
-              minHeight: 320,
-              position: "relative",
-              color: "#fff",
-            }}
-          >
-            {previewItem.glowText ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 16,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: 120,
-                  fontWeight: 900,
-                  letterSpacing: 2,
-                  color: "rgba(255,255,255,0.06)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {previewItem.glowText}
-              </div>
-            ) : null}
-
-            <div style={{ position: "relative", zIndex: 2 }}>
-              <div style={{ opacity: 0.8 }}>{previewItem.subtitle}</div>
-              <div style={{ fontSize: 44, fontWeight: 900, lineHeight: 1.05 }}>
-                {previewItem.title}
-              </div>
-              <div style={{ marginTop: 16 }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "10px 18px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    background: "rgba(0,0,0,0.28)",
-                    fontWeight: 900,
-                  }}
-                >
-                  {previewItem.ctaText || "XEM NGAY"} →
-                </span>
-              </div>
-              <div style={{ marginTop: 10, opacity: 0.75, fontSize: 12 }}>
-                Link: {previewItem.ctaLink}
-              </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", zIndex: 2 }}>
+          previewItem.imageOnly ? (
+            <div
+              style={{
+                borderRadius: 16,
+                overflow: "hidden",
+                background: "#0b1220",
+              }}
+            >
               {previewItem.imageUrl ? (
                 <img
                   src={
@@ -741,16 +785,91 @@ const AdminBanner = () => {
                       : `http://localhost:9999${previewItem.imageUrl}`
                   }
                   alt="preview"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: 280,
-                    objectFit: "contain",
-                    filter: "drop-shadow(0 18px 50px rgba(0,0,0,0.55))",
-                  }}
+                  style={{ width: "100%", height: 380, objectFit: "cover" }}
                 />
               ) : null}
+              <div style={{ padding: 12, color: "#6b7280", fontSize: 12 }}>
+                Link: {previewItem.ctaLink}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div
+              style={{
+                borderRadius: 16,
+                overflow: "hidden",
+                background: previewItem.bgValue || DEFAULT_BG,
+                padding: 24,
+                display: "grid",
+                gridTemplateColumns: "1.2fr 1fr",
+                alignItems: "center",
+                gap: 20,
+                minHeight: 320,
+                position: "relative",
+                color: "#fff",
+              }}
+            >
+              {previewItem.glowText ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 16,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: 120,
+                    fontWeight: 900,
+                    letterSpacing: 2,
+                    color: "rgba(255,255,255,0.06)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {previewItem.glowText}
+                </div>
+              ) : null}
+
+              <div style={{ position: "relative", zIndex: 2 }}>
+                <div style={{ opacity: 0.8 }}>{previewItem.subtitle}</div>
+                <div style={{ fontSize: 44, fontWeight: 900, lineHeight: 1.05 }}>
+                  {previewItem.title}
+                </div>
+                <div style={{ marginTop: 16 }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      padding: "10px 18px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      background: "rgba(0,0,0,0.28)",
+                      fontWeight: 900,
+                    }}
+                  >
+                    {previewItem.ctaText || "XEM NGAY"} →
+                  </span>
+                </div>
+                <div style={{ marginTop: 10, opacity: 0.75, fontSize: 12 }}>
+                  Link: {previewItem.ctaLink}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", zIndex: 2 }}>
+                {previewItem.imageUrl ? (
+                  <img
+                    src={
+                      previewItem.imageUrl.startsWith("http")
+                        ? previewItem.imageUrl
+                        : `http://localhost:9999${previewItem.imageUrl}`
+                    }
+                    alt="preview"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: 280,
+                      objectFit: "contain",
+                      filter: "drop-shadow(0 18px 50px rgba(0,0,0,0.55))",
+                    }}
+                  />
+                ) : null}
+              </div>
+            </div>
+          )
         ) : null}
       </Modal>
     </div>

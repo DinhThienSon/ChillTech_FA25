@@ -19,7 +19,56 @@ const getAllBanners = async (req, res) => {
  */
 const createBanner = async (req, res) => {
   try {
-    const banner = new Banner(req.body);
+    const {
+      title,
+      subtitle,
+      ctaText,
+      ctaLink,
+      imageUrl,
+      bgValue,
+      glowText,
+      page,
+      order,
+      active,
+      imageOnly,
+    } = req.body;
+
+    const isImageOnly = imageOnly === true || imageOnly === "true";
+
+    // ✅ Validate theo chế độ banner
+    if (isImageOnly) {
+      if (!imageUrl) {
+        return res.status(400).json({
+          message: "Banner dạng chỉ hình ảnh bắt buộc phải có imageUrl",
+        });
+      }
+    } else {
+      if (!title) {
+        return res.status(400).json({
+          message: "Tiêu đề banner không được để trống",
+        });
+      }
+      if (!imageUrl) {
+        return res.status(400).json({
+          message: "Banner bắt buộc phải có imageUrl",
+        });
+      }
+    }
+
+    const banner = new Banner({
+      title,
+      subtitle,
+      ctaText,
+      ctaLink,
+      imageUrl,
+      bgValue,
+      glowText,
+      page,
+      order,
+      active,
+      imageOnly: !!isImageOnly,
+    });
+
     await banner.save();
     res.json({ message: "Tạo banner thành công", data: banner });
   } catch (err) {
@@ -33,11 +82,48 @@ const createBanner = async (req, res) => {
  */
 const updateBanner = async (req, res) => {
   try {
-    const banner = await Banner.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const existing = await Banner.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: "Không tìm thấy banner" });
+    }
+
+    // Xác định trạng thái sau update (nếu body không gửi field thì lấy từ existing)
+    const nextImageOnly =
+      req.body.imageOnly === undefined
+        ? existing.imageOnly
+        : req.body.imageOnly === true || req.body.imageOnly === "true";
+
+    const nextTitle =
+      req.body.title === undefined ? existing.title : req.body.title;
+
+    const nextImageUrl =
+      req.body.imageUrl === undefined ? existing.imageUrl : req.body.imageUrl;
+
+    // ✅ Validate theo chế độ banner
+    if (nextImageOnly) {
+      if (!nextImageUrl) {
+        return res.status(400).json({
+          message: "Banner dạng chỉ hình ảnh bắt buộc phải có imageUrl",
+        });
+      }
+    } else {
+      if (!nextTitle) {
+        return res.status(400).json({
+          message: "Tiêu đề banner không được để trống",
+        });
+      }
+      if (!nextImageUrl) {
+        return res.status(400).json({
+          message: "Banner bắt buộc phải có imageUrl",
+        });
+      }
+    }
+
+    const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true, // ✅ đảm bảo schema validate chạy khi update
+    });
+
     res.json({ message: "Cập nhật banner thành công", data: banner });
   } catch (err) {
     res.status(400).json({ message: err.message });

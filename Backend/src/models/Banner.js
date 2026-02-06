@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 
 const bannerSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String, required: function () { return !this.imageOnly; } },
     subtitle: { type: String, default: "" },
+    imageOnly: { type: Boolean, default: false },
 
     ctaText: { type: String, default: "XEM NGAY" },
     ctaLink: { type: String, default: "/products" },
