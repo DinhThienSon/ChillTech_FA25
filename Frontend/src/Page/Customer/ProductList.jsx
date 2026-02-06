@@ -48,7 +48,7 @@ const ProductList = () => {
   // filters
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-  const [categoriesSelected, setCategoriesSelected] = useState([]); // ✅ multi-category
+  const [categoriesSelected, setCategoriesSelected] = useState([]); // multi-category
   const [inStockOnly, setInStockOnly] = useState(false);
 
   // category view
@@ -62,6 +62,35 @@ const ProductList = () => {
   const [view, setView] = useState("grid"); // grid | list
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
+
+  // ===== Styles (Blue theme) =====
+  const buyBtnStyle = {
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 14,
+    border: "none",
+    fontWeight: 900,
+    fontSize: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    background: "linear-gradient(135deg, #2563eb, #1d4ed8)", // xanh nước biển
+    boxShadow: "0 10px 24px rgba(37, 99, 235, 0.35)",
+  };
+
+  const buyBtnHover = {
+    transform: "translateY(-2px) scale(1.01)",
+    boxShadow: "0 14px 32px rgba(37, 99, 235, 0.45)",
+  };
+
+  const viewBtnStyle = {
+    width: "100%",
+    borderRadius: 12,
+    border: "1px solid rgba(37, 99, 235, 0.35)",
+    color: "#1d4ed8",
+    background: "#fff",
+  };
 
   // load products
   useEffect(() => {
@@ -175,8 +204,7 @@ const ProductList = () => {
     setPage(1);
   }, [search, sort, categoriesSelected, inStockOnly, priceRange]);
 
-  // ✅ fixed image container (no distortion)
-  // (đổi qua cover để ảnh đều khung kiểu shop)
+  // image
   const renderImage = (item) => {
     const src = item.imageUrl ? `${API_URL}${item.imageUrl}` : "/no-image.png";
 
@@ -204,10 +232,12 @@ const ProductList = () => {
     );
   };
 
-  // ✅ grid card fixed height + bottom buttons
+  // ===== GRID CARD =====
   const ProductCardGrid = ({ item }) => {
     const stock = Number(item.stockQuantity) || 0;
     const inStock = stock > 0;
+
+    const [isHoverBuy, setIsHoverBuy] = useState(false);
 
     return (
       <Badge.Ribbon
@@ -226,7 +256,8 @@ const ProductList = () => {
             padding: 14,
             display: "flex",
             flexDirection: "column",
-            height: 190,
+            // ✅ FIX: bỏ height cố định để không che nút “Xem thêm”
+            minHeight: 230,
           }}
           cover={<Link to={`/products/${item._id}`}>{renderImage(item)}</Link>}
         >
@@ -250,13 +281,21 @@ const ProductList = () => {
             </Link>
           </div>
 
-          <div style={{ marginTop: 8 }}>
-            <Text style={{ color: "#003a5c", fontSize: 18, fontWeight: 700 }}>
+          {/* ✅ Giá to + xanh biển */}
+          <div style={{ marginTop: 10 }}>
+            <Text
+              style={{
+                color: "#1d4ed8",
+                fontSize: 24,
+                fontWeight: 900,
+                lineHeight: 1,
+              }}
+            >
               {item.price ? `${money(item.price)}₫` : "Liên hệ"}
             </Text>
           </div>
 
-          <div style={{ marginTop: 6 }}>
+          <div style={{ marginTop: 8 }}>
             <Tag color={inStock ? "green" : "red"} style={{ margin: 0 }}>
               {inStock ? `Còn ${stock} sản phẩm` : "Tạm hết"}
             </Tag>
@@ -264,38 +303,48 @@ const ProductList = () => {
 
           <div style={{ flex: 1 }} />
 
-          <Space style={{ width: "100%", marginTop: 12 }}>
+          {/* CTA area */}
+          <div style={{ marginTop: 12 }}>
             <Button
-              type="primary"
               icon={<ShoppingCartOutlined />}
               disabled={!inStock}
+              onMouseEnter={() => setIsHoverBuy(true)}
+              onMouseLeave={() => setIsHoverBuy(false)}
               onClick={() => {
                 addToCart(item, 1);
                 message.success("Đã thêm vào giỏ!");
               }}
-              style={{ flex: 1 }}
+              style={{
+                ...buyBtnStyle,
+                ...(isHoverBuy ? buyBtnHover : null),
+                opacity: inStock ? 1 : 0.6,
+                cursor: inStock ? "pointer" : "not-allowed",
+                color: "#fff",
+              }}
             >
-              Thêm giỏ
+              MUA NGAY
             </Button>
 
-            <Tooltip title="Xem chi tiết">
-              <Button style={{ flex: "none" }}>
+            <Tooltip title="Xem chi tiết sản phẩm">
+              <Button style={{ ...viewBtnStyle, marginTop: 8 }}>
                 <Link to={`/products/${item._id}`} style={{ color: "inherit" }}>
-                  Xem
+                  Xem thêm →
                 </Link>
               </Button>
             </Tooltip>
-          </Space>
+          </div>
         </Card>
       </Badge.Ribbon>
     );
   };
 
-  // ✅ list view row: chống tràn nút bằng flex-wrap
+  // ===== LIST ROW =====
   const ProductRowList = ({ item }) => {
     const stock = Number(item.stockQuantity) || 0;
     const inStock = stock > 0;
     const src = item.imageUrl ? `${API_URL}${item.imageUrl}` : "/no-image.png";
+
+    const [isHoverBuy, setIsHoverBuy] = useState(false);
 
     return (
       <Card hoverable style={{ borderRadius: 14 }} bodyStyle={{ padding: 14 }}>
@@ -360,11 +409,18 @@ const ProductList = () => {
             style={{
               marginLeft: "auto",
               flex: "0 0 auto",
-              minWidth: 240,
+              minWidth: 260,
               textAlign: "right",
             }}
           >
-            <Text style={{ color: "#003a5c", fontSize: 18, fontWeight: 700 }}>
+            <Text
+              style={{
+                color: "#1d4ed8",
+                fontSize: 24,
+                fontWeight: 900,
+                lineHeight: 1,
+              }}
+            >
               {item.price ? `${money(item.price)}₫` : "Liên hệ"}
             </Text>
 
@@ -378,20 +434,29 @@ const ProductList = () => {
               }}
             >
               <Button
-                type="primary"
                 icon={<ShoppingCartOutlined />}
                 disabled={!inStock}
+                onMouseEnter={() => setIsHoverBuy(true)}
+                onMouseLeave={() => setIsHoverBuy(false)}
                 onClick={() => {
                   addToCart(item, 1);
                   message.success("Đã thêm vào giỏ!");
                 }}
+                style={{
+                  ...buyBtnStyle,
+                  ...(isHoverBuy ? buyBtnHover : null),
+                  width: 260,
+                  color: "#fff",
+                  opacity: inStock ? 1 : 0.6,
+                  cursor: inStock ? "pointer" : "not-allowed",
+                }}
               >
-                Thêm giỏ
+                MUA NGAY
               </Button>
 
-              <Button>
+              <Button style={{ ...viewBtnStyle, width: 260 }}>
                 <Link to={`/products/${item._id}`} style={{ color: "inherit" }}>
-                  Xem chi tiết
+                  Xem thêm →
                 </Link>
               </Button>
             </div>
@@ -414,7 +479,10 @@ const ProductList = () => {
       </div>
 
       {/* Top controls */}
-      <Card style={{ borderRadius: 14, marginBottom: 18 }} bodyStyle={{ padding: 14 }}>
+      <Card
+        style={{ borderRadius: 14, marginBottom: 18 }}
+        bodyStyle={{ padding: 14 }}
+      >
         <Row gutter={[12, 12]} align="middle">
           <Col xs={24} md={10}>
             <Input
@@ -445,7 +513,11 @@ const ProductList = () => {
             />
           </Col>
 
-          <Col xs={24} md={5} style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Col
+            xs={24}
+            md={5}
+            style={{ display: "flex", justifyContent: "flex-end" }}
+          >
             <Button icon={<ReloadOutlined />} onClick={resetFilters}>
               Reset lọc
             </Button>
@@ -458,7 +530,6 @@ const ProductList = () => {
         <Col xs={24} md={6}>
           <div style={{ position: "sticky", top: 16 }}>
             <Card title="Bộ lọc" style={{ borderRadius: 14 }}>
-              {/* ✅ Multi category */}
               <div style={{ marginBottom: 10 }}>
                 <Text strong>Danh mục</Text>
 
@@ -474,7 +545,11 @@ const ProductList = () => {
                     checked={categoriesSelected.length === 0}
                     onChange={() => setCategoriesSelected([])}
                   >
-                    <span style={{ fontWeight: categoriesSelected.length === 0 ? 600 : 400 }}>
+                    <span
+                      style={{
+                        fontWeight: categoriesSelected.length === 0 ? 600 : 400,
+                      }}
+                    >
                       Tất cả
                     </span>
                   </Checkbox>
@@ -487,13 +562,21 @@ const ProductList = () => {
                     style={{ width: "100%" }}
                   >
                     <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                      {(showAllCats ? categories : categories.slice(0, 8)).map((cat) => (
-                        <Checkbox key={cat} value={cat}>
-                          <span style={{ fontWeight: categoriesSelected.includes(cat) ? 600 : 400 }}>
-                            {cat}
-                          </span>
-                        </Checkbox>
-                      ))}
+                      {(showAllCats ? categories : categories.slice(0, 8)).map(
+                        (cat) => (
+                          <Checkbox key={cat} value={cat}>
+                            <span
+                              style={{
+                                fontWeight: categoriesSelected.includes(cat)
+                                  ? 600
+                                  : 400,
+                              }}
+                            >
+                              {cat}
+                            </span>
+                          </Checkbox>
+                        )
+                      )}
                     </Space>
                   </Checkbox.Group>
                 </div>
@@ -565,11 +648,10 @@ const ProductList = () => {
           ) : (
             <>
               {view === "grid" ? (
-                // ✅ FIX: ít sản phẩm thì card to hơn và nằm giữa (như ảnh bạn muốn)
                 <Row gutter={[16, 16]} align="stretch" justify="center">
                   {(() => {
                     const count = pagedProducts.length;
-                    const lgSpan = count <= 2 ? 10 : 8; // ✅ 1-2 sp: to hơn, căn giữa
+                    const lgSpan = count <= 2 ? 10 : 8;
 
                     return pagedProducts.map((item) => (
                       <Col
@@ -594,7 +676,9 @@ const ProductList = () => {
                 </Space>
               )}
 
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 18 }}>
+              <div
+                style={{ display: "flex", justifyContent: "center", marginTop: 18 }}
+              >
                 <Pagination
                   current={page}
                   pageSize={pageSize}
