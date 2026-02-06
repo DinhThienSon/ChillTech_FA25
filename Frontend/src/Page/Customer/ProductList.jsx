@@ -70,6 +70,37 @@ const ProductList = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
 
+
+// ===== Styles (Blue theme) =====
+const buyBtnStyle = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "none",
+  fontWeight: 900,
+  fontSize: 14,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 10,
+  background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+  boxShadow: "0 10px 24px rgba(37, 99, 235, 0.35)",
+};
+
+const buyBtnHover = {
+  transform: "translateY(-2px) scale(1.01)",
+  boxShadow: "0 14px 32px rgba(37, 99, 235, 0.45)",
+};
+
+const viewBtnStyle = {
+  width: "100%",
+  borderRadius: 12,
+  border: "1px solid rgba(37, 99, 235, 0.35)",
+  color: "#1d4ed8",
+  background: "#fff",
+};
+// ===============================
+
   // load products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -245,6 +276,9 @@ useEffect(() => {
     const stock = Number(item.stockQuantity) || 0;
     const inStock = stock > 0;
 
+
+    const [isHoverBuy, setIsHoverBuy] = useState(false);
+
     return (
       <Badge.Ribbon
         text={inStock ? "Còn hàng" : "Hết hàng"}
@@ -287,7 +321,7 @@ useEffect(() => {
           </div>
 
           <div style={{ marginTop: 8 }}>
-            <Text style={{ color: "#003a5c", fontSize: 18, fontWeight: 700 }}>
+            <Text style={{ color: "#1d4ed8", fontSize: 24, fontWeight: 900, lineHeight: 1 }}>
               {item.price ? `${money(item.price)}₫` : "Liên hệ"}
             </Text>
           </div>
@@ -313,15 +347,23 @@ useEffect(() => {
                 }
                 addToCart(item, 1);
                 message.success("Đã thêm vào giỏ!");              }}
-              style={{ flex: 1 }}
+              onMouseEnter={() => setIsHoverBuy(true)}
+              onMouseLeave={() => setIsHoverBuy(false)}
+              style={{
+                ...buyBtnStyle,
+                ...(isHoverBuy ? buyBtnHover : null),
+                opacity: inStock ? 1 : 0.6,
+                cursor: inStock ? "pointer" : "not-allowed",
+                color: "#fff",
+              }}
             >
-              Thêm giỏ
+              MUA NGAY
             </Button>
 
             <Tooltip title="Xem chi tiết">
-              <Button style={{ flex: "none" }}>
+              <Button style={viewBtnStyle}>
                 <Link to={`/products/${item._id}`} style={{ color: "inherit" }}>
-                  Xem
+                  Xem thêm →
                 </Link>
               </Button>
             </Tooltip>
@@ -336,6 +378,9 @@ useEffect(() => {
     const stock = Number(item.stockQuantity) || 0;
     const inStock = stock > 0;
     const src = item.imageUrl ? `${API_URL}${item.imageUrl}` : "/no-image.png";
+
+
+    const [isHoverBuy, setIsHoverBuy] = useState(false);
 
     return (
       <Card hoverable style={{ borderRadius: 14 }} bodyStyle={{ padding: 14 }}>
@@ -404,7 +449,7 @@ useEffect(() => {
               textAlign: "right",
             }}
           >
-            <Text style={{ color: "#003a5c", fontSize: 18, fontWeight: 700 }}>
+            <Text style={{ color: "#1d4ed8", fontSize: 24, fontWeight: 900, lineHeight: 1 }}>
               {item.price ? `${money(item.price)}₫` : "Liên hệ"}
             </Text>
 
@@ -421,6 +466,8 @@ useEffect(() => {
                 type="primary"
                 icon={<ShoppingCartOutlined />}
                 disabled={!inStock}
+                onMouseEnter={() => setIsHoverBuy(true)}
+                onMouseLeave={() => setIsHoverBuy(false)}
                 onClick={() => {
                 if (!user) {
                   message.info("Vui lòng đăng nhập để thêm vào giỏ");
@@ -429,13 +476,21 @@ useEffect(() => {
                 }
                   addToCart(item, 1);
                   message.success("Đã thêm vào giỏ!");              }}
+                style={{
+                  ...buyBtnStyle,
+                  ...(isHoverBuy ? buyBtnHover : null),
+                  width: 260,
+                  color: "#fff",
+                  opacity: inStock ? 1 : 0.6,
+                  cursor: inStock ? "pointer" : "not-allowed",
+                }}
               >
-                Thêm giỏ
+                MUA NGAY
               </Button>
 
-              <Button>
+              <Button style={{ ...viewBtnStyle, width: 260 }}>
                 <Link to={`/products/${item._id}`} style={{ color: "inherit" }}>
-                  Xem chi tiết
+                  Xem thêm →
                 </Link>
               </Button>
             </div>

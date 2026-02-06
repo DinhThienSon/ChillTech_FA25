@@ -12,17 +12,22 @@ import {
     Input,
     Select,
     message,
+    Avatar,
+    Typography,
+    Divider,
 } from "antd";
 import {
     LockOutlined,
     ProfileOutlined,
     EditOutlined,
+    UserOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:9999";
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 const CustomerProfile = () => {
     const [profile, setProfile] = useState(null);
@@ -31,7 +36,7 @@ const CustomerProfile = () => {
     const [form] = Form.useForm();
     const navigate = useNavigate();
 
-    /* ===== FETCH PROFILE ===== */
+    /* ===== LẤY THÔNG TIN NGƯỜI DÙNG ===== */
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -51,7 +56,7 @@ const CustomerProfile = () => {
         fetchProfile();
     }, []);
 
-    /* ===== OPEN EDIT MODAL ===== */
+    /* ===== MỞ MODAL CHỈNH SỬA ===== */
     const openEditModal = () => {
         form.setFieldsValue({
             customerName: profile?.customer?.customerName,
@@ -62,7 +67,7 @@ const CustomerProfile = () => {
         setEditOpen(true);
     };
 
-    /* ===== UPDATE PROFILE (CALL BACKEND) ===== */
+    /* ===== CẬP NHẬT THÔNG TIN ===== */
     const handleUpdateProfile = async (values) => {
         try {
             const res = await axios.put(
@@ -71,7 +76,6 @@ const CustomerProfile = () => {
                 { withCredentials: true }
             );
 
-            // Update UI theo response backend
             setProfile((prev) => ({
                 ...prev,
                 account: {
@@ -94,10 +98,10 @@ const CustomerProfile = () => {
         }
     };
 
-    /* ===== LOADING ===== */
+    /* ===== TRẠNG THÁI LOADING ===== */
     if (loading) {
         return (
-            <div style={{ textAlign: "center", marginTop: 80 }}>
+            <div style={{ textAlign: "center", marginTop: 100 }}>
                 <Spin size="large" />
             </div>
         );
@@ -108,80 +112,135 @@ const CustomerProfile = () => {
     const { account, customer } = profile;
 
     return (
-        <div style={{ marginTop: 40 }}>
-            <Row justify="center">
-                {/* ===== MAIN CONTENT (~70%) ===== */}
-                <Col span={16}>
-                    {/* ===== PROFILE INFO ===== */}
-                    <Card title="Personal Information" style={{ marginBottom: 24 }}>
-                        <Descriptions
-                            bordered
-                            column={2}
-                            labelStyle={{ width: 160, fontWeight: 600 }}
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "#f5f7fa",
+                padding: "40px 16px",
+            }}
+        >
+            <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+                <Title level={2} style={{ marginBottom: 24 }}>
+                    Tài khoản của tôi
+                </Title>
+
+                <Row gutter={[24, 24]}>
+                    {/* ===== CỘT TRÁI ===== */}
+                    <Col xs={24} md={8}>
+                        <Card
+                            bordered={false}
+                            style={{
+                                borderRadius: 12,
+                                textAlign: "center",
+                                boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+                            }}
                         >
-                            <Descriptions.Item label="Full name">
-                                {customer?.customerName || "—"}
-                            </Descriptions.Item>
+                            <Avatar
+                                size={96}
+                                icon={<UserOutlined />}
+                                style={{
+                                    backgroundColor: "#1677ff",
+                                    marginBottom: 12,
+                                }}
+                            />
 
-                            <Descriptions.Item label="Email">
-                                {account?.email || "—"}
-                            </Descriptions.Item>
+                            <Title level={4} style={{ marginBottom: 4 }}>
+                                {customer?.customerName || "Khách hàng"}
+                            </Title>
 
-                            <Descriptions.Item label="Phone">
-                                {account?.phone || "—"}
-                            </Descriptions.Item>
+                            <Text type="secondary">
+                                {account?.email}
+                            </Text>
 
-                            <Descriptions.Item label="Address">
-                                {customer?.address || "—"}
-                            </Descriptions.Item>
-                        </Descriptions>
-                    </Card>
+                            <Divider />
 
-                    {/* ===== ACTIONS ===== */}
-                    <Card title="Account Actions">
-                        <Space
-                            direction="vertical"
-                            size="middle"
-                            style={{ width: "100%" }}
+                            <Space
+                                direction="vertical"
+                                size="middle"
+                                style={{ width: "100%" }}
+                            >
+                                <Button
+                                    icon={<EditOutlined />}
+                                    block
+                                    onClick={openEditModal}
+                                >
+                                    Chỉnh sửa thông tin
+                                </Button>
+
+                                <Button
+                                    icon={<LockOutlined />}
+                                    block
+                                    onClick={() => console.log("Đổi mật khẩu")}
+                                >
+                                    Đổi mật khẩu
+                                </Button>
+
+                                <Button
+                                    icon={<ProfileOutlined />}
+                                    block
+                                    onClick={() => navigate("/customer-orders")}
+                                >
+                                    Đơn hàng của tôi
+                                </Button>
+                            </Space>
+                        </Card>
+                    </Col>
+
+                    {/* ===== CỘT PHẢI ===== */}
+                    <Col xs={24} md={16}>
+                        <Card
+                            bordered={false}
+                            style={{
+                                borderRadius: 12,
+                                boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+                            }}
                         >
-                            <Button
-                                icon={<EditOutlined />}
-                                size="large"
-                                block
-                                onClick={openEditModal}
-                            >
-                                Edit Profile
-                            </Button>
+                            <Title level={4} style={{ marginBottom: 16 }}>
+                                Thông tin cá nhân
+                            </Title>
 
-                            <Button
-                                icon={<LockOutlined />}
-                                size="large"
-                                block
-                                onClick={() => console.log("Change password")}
+                            <Descriptions
+                                bordered
+                                column={1}
+                                size="middle"
+                                labelStyle={{
+                                    width: 180,
+                                    fontWeight: 600,
+                                    background: "#fafafa",
+                                }}
                             >
-                                Change Password
-                            </Button>
+                                <Descriptions.Item label="Họ và tên">
+                                    {customer?.customerName || "—"}
+                                </Descriptions.Item>
 
-                            <Button
-                                icon={<ProfileOutlined />}
-                                size="large"
-                                block
-                                onClick={() => navigate("/customer-orders")}
-                            >
-                                Order List
-                            </Button>
-                        </Space>
-                    </Card>
-                </Col>
-            </Row>
+                                <Descriptions.Item label="Email">
+                                    {account?.email || "—"}
+                                </Descriptions.Item>
 
-            {/* ===== EDIT PROFILE MODAL ===== */}
+                                <Descriptions.Item label="Số điện thoại">
+                                    {account?.phone || "—"}
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="Địa chỉ">
+                                    {customer?.address || "—"}
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="Giới tính">
+                                    {customer?.gender || "—"}
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
+
+            {/* ===== MODAL CHỈNH SỬA ===== */}
             <Modal
-                title="Edit Profile"
+                title="Chỉnh sửa thông tin cá nhân"
                 open={editOpen}
                 onCancel={() => setEditOpen(false)}
                 onOk={() => form.submit()}
-                okText="Save"
+                okText="Lưu"
                 destroyOnClose
             >
                 <Form
@@ -190,26 +249,28 @@ const CustomerProfile = () => {
                     onFinish={handleUpdateProfile}
                 >
                     <Form.Item
-                        label="Full name"
+                        label="Họ và tên"
                         name="customerName"
-                        rules={[{ required: true, message: "Vui lòng nhập tên" }]}
+                        rules={[
+                            { required: true, message: "Vui lòng nhập họ tên" },
+                        ]}
                     >
                         <Input />
                     </Form.Item>
 
-                    <Form.Item label="Phone" name="phone">
+                    <Form.Item label="Số điện thoại" name="phone">
                         <Input />
                     </Form.Item>
 
-                    <Form.Item label="Address" name="address">
+                    <Form.Item label="Địa chỉ" name="address">
                         <Input.TextArea rows={2} />
                     </Form.Item>
 
-                    <Form.Item label="Gender" name="gender">
-                        <Select allowClear>
-                            <Option value="MALE">Male</Option>
-                            <Option value="FEMALE">Female</Option>
-                            <Option value="OTHER">Other</Option>
+                    <Form.Item label="Giới tính" name="gender">
+                        <Select allowClear placeholder="Chọn giới tính">
+                            <Option value="MALE">Nam</Option>
+                            <Option value="FEMALE">Nữ</Option>
+                            <Option value="OTHER">Khác</Option>
                         </Select>
                     </Form.Item>
                 </Form>
