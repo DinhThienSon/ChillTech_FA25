@@ -474,7 +474,7 @@ const ProductList = () => {
           Sản phẩm linh kiện điện lạnh
         </Title>
         <Text type="secondary">
-          Tìm thấy <b>{total}</b> sản phẩm
+        
         </Text>
       </div>
 
@@ -529,7 +529,7 @@ const ProductList = () => {
         {/* Sidebar Filters */}
         <Col xs={24} md={6}>
           <div style={{ position: "sticky", top: 16 }}>
-            <Card title="Bộ lọc" style={{ borderRadius: 14 }}>
+            <Card title="Sản Phẩm" style={{ borderRadius: 14 }}>
               <div style={{ marginBottom: 10 }}>
                 <Text strong>Danh mục</Text>
 
