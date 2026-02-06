@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Button, Tag, Spin } from "antd";
+import { Row, Col, Card, Button, Tag, Spin, message } from "antd";
 import {
   ShoppingCartOutlined,
   SafetyOutlined,
   CustomerServiceOutlined,
   VerifiedOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import FeaturedBanner from "../../components/FeaturedBanner/FeaturedBanner";
+import { useCart } from "../../Routes/Context/CartContext";
+import { useAuth } from "../../Routes/Context/AuthContext";
 
 const API_URL = "http://localhost:9999";
 
 const HomePage = () => {
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -239,6 +245,15 @@ useEffect(() => {
                       type="primary"
                       block
                       icon={<ShoppingCartOutlined />}
+                                        onClick={() => {
+                      if (!user) {
+                        message.info("Vui lòng đăng nhập để thêm vào giỏ");
+                        navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
+                        return;
+                      }
+                      addToCart(item, 1);
+                      message.success("Đã thêm vào giỏ!");
+                    }}
                     >
                       Thêm vào giỏ
                     </Button>

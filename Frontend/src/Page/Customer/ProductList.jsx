@@ -21,10 +21,11 @@ import {
   message,
   Checkbox,
 } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import FeaturedBanner from "../../components/FeaturedBanner/FeaturedBanner";
 import axios from "axios";
 import { useCart } from "../../Routes/Context/CartContext";
+import { useAuth } from "../../Routes/Context/AuthContext";
 import {
   ReloadOutlined,
   AppstoreOutlined,
@@ -41,8 +42,10 @@ const money = (v) => (Number(v) || 0).toLocaleString("vi-VN");
 
 const ProductList = () => {
   const { addToCart } = useCart();
-
-  // data
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+// data
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -303,9 +306,13 @@ useEffect(() => {
               icon={<ShoppingCartOutlined />}
               disabled={!inStock}
               onClick={() => {
+                if (!user) {
+                  message.info("Vui lòng đăng nhập để thêm vào giỏ");
+                  navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
+                  return;
+                }
                 addToCart(item, 1);
-                message.success("Đã thêm vào giỏ!");
-              }}
+                message.success("Đã thêm vào giỏ!");              }}
               style={{ flex: 1 }}
             >
               Thêm giỏ
@@ -415,9 +422,13 @@ useEffect(() => {
                 icon={<ShoppingCartOutlined />}
                 disabled={!inStock}
                 onClick={() => {
+                if (!user) {
+                  message.info("Vui lòng đăng nhập để thêm vào giỏ");
+                  navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
+                  return;
+                }
                   addToCart(item, 1);
-                  message.success("Đã thêm vào giỏ!");
-                }}
+                  message.success("Đã thêm vào giỏ!");              }}
               >
                 Thêm giỏ
               </Button>

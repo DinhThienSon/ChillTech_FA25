@@ -1,7 +1,8 @@
 // ProductDetail.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../Routes/Context/CartContext";
+import { useAuth } from "../../Routes/Context/AuthContext";
 
 import {
   Row,
@@ -43,6 +44,9 @@ const API_URL = "http://localhost:9999";
 const money = (v) => (Number(v) || 0).toLocaleString("vi-VN");
 
 const ProductDetail = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const { addToCart } = useCart();
 
@@ -281,6 +285,11 @@ const ProductDetail = () => {
                     block
                     icon={<ShoppingCartOutlined />}
                     onClick={() => {
+                      if (!user) {
+                        message.info("Vui lòng đăng nhập để thêm vào giỏ");
+                        navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
+                        return;
+                      }
                       addToCart(product, quantity);
                       message.success("Đã thêm vào giỏ hàng!");
                     }}
