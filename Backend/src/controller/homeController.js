@@ -1,4 +1,4 @@
-const customerService = require("../service/customerService");
+import customerService from "../service/customerService";
 
 const handleHelloworld = (req, res) => {
     const name = "Alex";

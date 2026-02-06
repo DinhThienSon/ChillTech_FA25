@@ -1,9 +1,9 @@
-const express = require('express');
-const homeController = require('../controller/homeController');
+import express from 'express';
+import homeController from '../controller/homeController';
 
 const router = express.Router();
 
-const initWebRoutes = (app) => {
+export const initWebRoutes = (app) => {
     router.get('/', homeController.handleHelloworld);
     router.get('/user', homeController.handleUser);
     router.post("/users/create-user", homeController.handleCreateNewUser);
@@ -16,5 +16,3 @@ router.post("/users/update/:id", homeController.handleUpdateUser);
 
     return app.use('/', router);
 }
-
-module.exports = initWebRoutes;
