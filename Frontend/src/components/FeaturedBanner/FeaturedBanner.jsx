@@ -3,20 +3,6 @@ import { Carousel, Button } from "antd";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
-/**
- * items: [
- *  {
- *    id: string,
- *    subtitle?: string,
- *    title: string,
- *    glowText?: string,
- *    ctaText?: string,
- *    href?: string,
- *    imageUrl?: string,
- *    bgColor?: string
- *  }
- * ]
- */
 const FeaturedBanner = ({ items = [], height = 320 }) => {
   const ref = useRef(null);
 
@@ -36,24 +22,47 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           background: #0b1220;
           box-shadow: 0 16px 40px rgba(0,0,0,.12);
         }
+
+        /* ===== MŨI TÊN ===== */
         .fb-arrow{
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          z-index: 5;
+          z-index: 2;               /* 👈 QUAN TRỌNG: đủ cao để thấy */
           width: 44px;
           height: 44px;
           border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.22);
-          background: rgba(255,255,255,0.92);
+          border: none;
+          background: rgba(255,255,255,0.12);
+          backdrop-filter: blur(8px);
           display: grid;
           place-items: center;
           cursor: pointer;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+
+          opacity: 0;               /* ẨN MẶC ĐỊNH */
+          pointer-events: none;
+          transition: opacity .25s ease, background .25s ease;
         }
+
+        /* Hover banner → hiện mũi tên */
+        .fb-wrap:hover .fb-arrow{
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .fb-arrow:hover{
+          background: rgba(255,255,255,0.22);
+        }
+
+        .fb-arrow svg{
+          color: rgba(255,255,255,0.75);
+          font-size: 18px;
+        }
+
         .fb-arrow.left{ left: 14px; }
         .fb-arrow.right{ right: 14px; }
 
+        /* ===== SLIDE ===== */
         .fb-slide{
           height: ${height}px;
           padding: 26px 34px;
@@ -62,6 +71,7 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           grid-template-columns: 1.2fr 1fr;
           align-items: center;
           gap: 18px;
+          z-index: 0;
         }
 
         .fb-glow{
@@ -72,7 +82,7 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           font-size: 120px;
           font-weight: 900;
           letter-spacing: 2px;
-          color: rgba(255,255,255,0.06);
+          color: rgba(255,255,255,0.04);
           text-transform: uppercase;
           pointer-events: none;
           user-select: none;
@@ -80,12 +90,18 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           z-index: 1;
         }
 
-        .fb-content{ position: relative; z-index: 2; }
+        /* ===== CHỮ LUÔN NỔI ===== */
+        .fb-content{
+          position: relative;
+          z-index: 5;               /* 👈 CAO NHẤT */
+        }
+
         .fb-subtitle{
           color: rgba(255,255,255,0.78);
           font-size: 14px;
           margin-bottom: 8px;
         }
+
         .fb-title{
           color: #fff;
           font-size: 42px;
@@ -94,9 +110,9 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           text-shadow: 0 10px 40px rgba(0,0,0,0.35);
           max-width: 560px;
         }
-        .fb-cta{
-          margin-top: 18px;
-        }
+
+        .fb-cta{ margin-top: 18px; }
+
         .fb-btn{
           border-radius: 999px !important;
           height: 44px !important;
@@ -114,6 +130,7 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           display: flex;
           justify-content: flex-end;
         }
+
         .fb-img img{
           max-height: ${height - 40}px;
           max-width: 100%;
@@ -121,7 +138,6 @@ const FeaturedBanner = ({ items = [], height = 320 }) => {
           filter: drop-shadow(0 18px 50px rgba(0,0,0,0.55));
         }
 
-        /* Responsive */
         @media (max-width: 900px){
           .fb-slide{
             grid-template-columns: 1fr;
