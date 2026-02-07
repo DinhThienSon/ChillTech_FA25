@@ -60,7 +60,77 @@ const confirmCheckout = async ({
   shippingAddress,
   note,
   shippingUnit,
+  // NEW (optional):
+  receiveMethod = "delivery", // "delivery" | "pickup"
+  pickupLocation,
+  customerInfo,
+  invoice,
 }) => {
+  // Normalize receive method
+  const method = receiveMethod === "pickup" ? "pickup" : "delivery";
+
+  // Pickup flow: no shipping provider required, shippingFee = 0
+  if (method === "pickup") {
+    const finalPickup = pickupLocation || shippingAddress;
+
+    if (!finalPickup) {
+      throw new Error("Chưa chọn điểm lấy hàng");
+    }
+
+    const cart = await Cart.findOne({ customer: customerId }).populate(
+      "items.product"
+    );
+
+    if (!cart || cart.items.length === 0) {
+      throw new Error("Giỏ hàng trống");
+    }
+
+    const totalProductPrice = cart.items.reduce(
+      (sum, item) => sum + item.quantity * item.priceAtTime,
+      0
+    );
+
+    const totalWeight = calculateTotalWeight(cart);
+    const shippingFee = 0;
+    const paymentContent = await generateUniquePaymentContent();
+
+    const order = await Order.create({
+      customer: customerId,
+      items: cart.items.map((item) => ({
+        product: item.product._id,
+        quantity: item.quantity,
+        price: item.priceAtTime,
+      })),
+      totalAmount: totalProductPrice + shippingFee,
+
+      receiveMethod: "pickup",
+      shippingUnit: "Tự đến lấy",
+      shippingFee,
+      totalWeight,
+
+      paymentContent,
+      shippingAddress: finalPickup,
+      note,
+
+      customerInfo: customerInfo || null,
+      invoice: invoice || null,
+
+      orderStatus: "Chờ thanh toán",
+    });
+
+    cart.items = [];
+    await cart.save();
+
+    return {
+      order,
+      paymentContent,
+      totalProductPrice,
+      shippingFee,
+      totalWeight,
+    };
+  }
+
+  // Delivery flow
   if (!shippingUnit) {
     throw new Error("Chưa chọn đơn vị vận chuyển");
   }
@@ -94,10 +164,19 @@ const confirmCheckout = async ({
       price: item.priceAtTime,
     })),
     totalAmount: totalProductPrice + shippingFee,
+
+    receiveMethod: "delivery",
     shippingUnit,
+    shippingFee,
+    totalWeight,
+
     paymentContent,
     shippingAddress,
     note,
+
+    customerInfo: customerInfo || null,
+    invoice: invoice || null,
+
     orderStatus: "Chờ thanh toán",
   });
 

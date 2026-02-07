@@ -6,13 +6,17 @@ const checkoutService = require("../service/checkoutService");
 const confirmCheckout = async (req, res) => {
   try {
     const customerId = req.user.customerId;
-    const { shippingAddress, note, shippingUnit } = req.body;
+    const { shippingAddress, note, shippingUnit, receiveMethod, pickupLocation, customerInfo, invoice } = req.body;
 
     const result = await checkoutService.confirmCheckout({
       customerId,
       shippingAddress,
       note,
       shippingUnit,
+      receiveMethod,
+      pickupLocation,
+      customerInfo,
+      invoice,
     });
 
     return res.json({
