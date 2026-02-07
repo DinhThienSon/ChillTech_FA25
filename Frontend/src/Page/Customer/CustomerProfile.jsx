@@ -33,7 +33,10 @@ const CustomerProfile = () => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
+    const [pwdOpen, setPwdOpen] = useState(false);
     const [form] = Form.useForm();
+    const [pwdForm] = Form.useForm();
+    const [pwdLoading, setPwdLoading] = useState(false);
     const navigate = useNavigate();
 
     /* ===== LẤY THÔNG TIN NGƯỜI DÙNG ===== */
@@ -97,6 +100,34 @@ const CustomerProfile = () => {
             );
         }
     };
+
+    /* ===== ĐỔI MẬT KHẨU ===== */
+    const handleChangePassword = async (values) => {
+        try {
+            setPwdLoading(true);
+            await axios.put(
+                `${API_URL}/api/auth/change-password`,
+                values,
+                { withCredentials: true }
+            );
+            message.success("Đổi mật khẩu thành công");
+            setPwdOpen(false);
+            pwdForm.resetFields();
+        } catch (error) {
+            message.error(
+                error?.response?.data?.message || "Đổi mật khẩu thất bại"
+            );
+        } finally {
+            setPwdLoading(false);
+        }
+    };
+
+
+    const openPasswordModal = () => {
+        pwdForm.resetFields();
+        setPwdOpen(true);
+    };
+
 
     /* ===== TRẠNG THÁI LOADING ===== */
     if (loading) {
@@ -170,7 +201,7 @@ const CustomerProfile = () => {
                                 <Button
                                     icon={<LockOutlined />}
                                     block
-                                    onClick={() => console.log("Đổi mật khẩu")}
+                                    onClick={openPasswordModal}
                                 >
                                     Đổi mật khẩu
                                 </Button>
@@ -275,6 +306,64 @@ const CustomerProfile = () => {
                     </Form.Item>
                 </Form>
             </Modal>
+            {/* ===== MODAL: ĐỔI MẬT KHẨU ===== */}
+            <Modal
+                title="Đổi mật khẩu"
+                open={pwdOpen}
+                onCancel={() => setPwdOpen(false)}
+                onOk={() => pwdForm.submit()}
+                okText="Cập nhật"
+                cancelText="Hủy"
+                confirmLoading={pwdLoading}
+                destroyOnClose
+            >
+                <Form
+                    layout="vertical"
+                    form={pwdForm}
+                    onFinish={handleChangePassword}
+                >
+                    <Form.Item
+                        label="Mật khẩu hiện tại"
+                        name="currentPassword"
+                        rules={[{ required: true, message: "Nhập mật khẩu hiện tại" }]}
+                    >
+                        <Input.Password placeholder="Nhập mật khẩu hiện tại" />
+                    </Form.Item>
+
+                    <Form.Item
+                        label="Mật khẩu mới"
+                        name="newPassword"
+                        rules={[
+                            { required: true, message: "Nhập mật khẩu mới" },
+                            { min: 8, message: "Mật khẩu mới ít nhất 8 ký tự" },
+                        ]}
+                    >
+                        <Input.Password placeholder="Nhập mật khẩu mới" />
+                    </Form.Item>
+
+                    <Form.Item
+                        label="Xác nhận mật khẩu mới"
+                        name="confirmPassword"
+                        dependencies={["newPassword"]}
+                        rules={[
+                            { required: true, message: "Nhập lại mật khẩu mới" },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    if (!value || getFieldValue("newPassword") === value) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(
+                                        new Error("Mật khẩu xác nhận không khớp")
+                                    );
+                                },
+                            }),
+                        ]}
+                    >
+                        <Input.Password placeholder="Nhập lại mật khẩu mới" />
+                    </Form.Item>
+                </Form>
+            </Modal>
+
         </div>
     );
 };

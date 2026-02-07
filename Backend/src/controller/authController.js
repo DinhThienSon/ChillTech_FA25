@@ -81,8 +81,69 @@ const me = async (req, res) => {
 };
 
 
+
+// ===== CHANGE PASSWORD =====
+const changePassword = async (req, res) => {
+  try {
+    const accountId = req.user?.accountId; // from authMiddleware
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!accountId) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+
+    // 1) Validate input
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin" });
+    }
+
+    if (String(newPassword).length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới phải có ít nhất 8 ký tự" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Mật khẩu xác nhận không khớp" });
+    }
+
+    if (newPassword === currentPassword) {
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới phải khác mật khẩu hiện tại" });
+    }
+
+    // 2) Find account
+    const account = await Account.findById(accountId);
+    if (!account) {
+      return res.status(404).json({ message: "Tài khoản không tồn tại" });
+    }
+
+    // 3) Check current password
+    const isMatch = await bcrypt.compare(currentPassword, account.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
+    }
+
+    // 4) Hash new password (bcryptjs supports genSalt)
+    const salt = await bcrypt.genSalt(10);
+    account.password = await bcrypt.hash(newPassword, salt);
+    await account.save();
+
+    // (Optional) If you want to force re-login, you can clear cookie here
+    // res.clearCookie("access_token");
+
+    return res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (error) {
+    console.error("CHANGE PASSWORD ERROR:", error);
+    return res.status(500).json({ message: "Lỗi server khi đổi mật khẩu" });
+  }
+};
+
+
 module.exports = {
   login,
   logout,
   me,
+  changePassword,
 };

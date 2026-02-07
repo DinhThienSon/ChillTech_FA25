@@ -18,6 +18,7 @@ const initAPIRoutes = (app) => {
   router.post("/auth/login", authController.login);
   router.post("/auth/logout", authController.logout);
   router.get("/auth/me", authController.me);
+  router.put("/auth/change-password", authMiddleware, authController.changePassword);
 
   /* ===== PRODUCTS – USER ===== */
   router.get("/products/public", productController.getPublicProducts);
