@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Row,
   Col,
@@ -14,23 +14,28 @@ import {
   Tag,
   theme,
   Tooltip,
+  Input,
 } from "antd";
 import {
   DeleteOutlined,
   ArrowLeftOutlined,
   RightOutlined,
   SafetyCertificateOutlined,
-  CarOutlined,
-  ReloadOutlined,
+  GiftOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { useCart } from "../../Routes/Context/CartContext";
 
 const { Title, Text } = Typography;
 
+const API_URL = "http://localhost:9999";
+
 const Cart = () => {
   const navigate = useNavigate();
   const { token } = theme.useToken();
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+
+  const [coupon, setCoupon] = useState("");
 
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => {
@@ -40,22 +45,25 @@ const Cart = () => {
   }, [cartItems]);
 
   const pageWrap = {
-    background: `radial-gradient(1200px 600px at 15% -10%, ${token.colorPrimaryBg} 0%, transparent 55%),
-                 radial-gradient(900px 450px at 100% 0%, ${token.colorInfoBg} 0%, transparent 55%),
-                 linear-gradient(180deg, ${token.colorFillSecondary} 0%, ${token.colorBgLayout} 58%, ${token.colorBgLayout} 100%)`,
+    background: `radial-gradient(1000px 500px at 15% -10%, ${token.colorPrimaryBg} 0%, transparent 55%),
+                 radial-gradient(800px 420px at 100% 0%, ${token.colorInfoBg} 0%, transparent 55%),
+                 linear-gradient(180deg, ${token.colorFillSecondary} 0%, ${token.colorBgLayout} 55%, ${token.colorBgLayout} 100%)`,
     minHeight: "calc(100vh - 64px)",
     padding: "28px 0 56px",
   };
 
   const container = { maxWidth: 1200, margin: "0 auto", padding: "0 16px" };
 
-  const cardBase = {
+  const softCard = {
     borderRadius: 18,
     boxShadow: token.boxShadowTertiary,
     background: token.colorBgContainer,
+    overflow: "hidden",
   };
 
-  if (cartItems.length === 0) {
+  const money = (v) => (Number(v || 0)).toLocaleString() + "₫";
+
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div style={pageWrap}>
         <div style={container}>
@@ -63,30 +71,44 @@ const Cart = () => {
             <Link to="/">Trang chủ</Link> {" / "} Giỏ hàng
           </Text>
 
-          <div style={{ marginTop: 14 }}>
+          <div style={{ marginTop: 12 }}>
             <Title level={2} style={{ margin: 0 }}>
               Giỏ hàng
             </Title>
-            <Text type="secondary">Chưa có sản phẩm nào trong giỏ.</Text>
+            <Text type="secondary">
+              Chưa có sản phẩm nào trong giỏ. Hãy chọn sản phẩm để tiếp tục.
+            </Text>
           </div>
 
-          <Card bordered={false} style={{ ...cardBase, maxWidth: 560, margin: "28px auto 0" }} bodyStyle={{ padding: 22 }}>
+          <Card
+            bordered={false}
+            style={{ ...softCard, maxWidth: 560, margin: "28px auto 0" }}
+            bodyStyle={{ padding: 22 }}
+          >
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ fontWeight: 800, fontSize: 16 }}>Giỏ hàng trống</div>
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontWeight: 900, fontSize: 16 }}>
+                    Giỏ hàng trống
+                  </div>
                   <div style={{ color: token.colorTextSecondary, marginTop: 4 }}>
-                    Hãy thêm sản phẩm để tiếp tục mua sắm.
+                    Thêm sản phẩm để thanh toán nhanh chóng.
                   </div>
                 </div>
               }
             />
+
             <Button
               type="primary"
               size="large"
               icon={<RightOutlined />}
-              style={{ width: "100%", height: 48, borderRadius: 12, fontWeight: 700 }}
+              style={{
+                width: "100%",
+                height: 48,
+                borderRadius: 14,
+                fontWeight: 900,
+              }}
               onClick={() => navigate("/products")}
             >
               Tiếp tục mua sắm
@@ -108,12 +130,12 @@ const Cart = () => {
         {/* Header */}
         <div
           style={{
+            marginTop: 12,
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "space-between",
             gap: 12,
             flexWrap: "wrap",
-            marginTop: 12,
           }}
         >
           <div>
@@ -121,18 +143,11 @@ const Cart = () => {
               Giỏ hàng của bạn
             </Title>
             <Text type="secondary">
-              {cartItems.length} sản phẩm • Kiểm tra số lượng trước khi thanh toán
+              {cartItems.length} sản phẩm • Kiểm tra số lượng và tiến hành thanh toán
             </Text>
           </div>
 
           <Space wrap>
-            <Button
-              icon={<ReloadOutlined />}
-              style={{ borderRadius: 12 }}
-              onClick={() => window.location.reload()}
-            >
-              Làm mới
-            </Button>
             <Button
               danger
               icon={<DeleteOutlined />}
@@ -144,31 +159,44 @@ const Cart = () => {
           </Space>
         </div>
 
-        <div style={{ height: 18 }} />
+        <div style={{ height: 16 }} />
 
         <Row gutter={[24, 24]}>
-          {/* LEFT: Items */}
+          {/* LEFT: ITEMS */}
           <Col xs={24} lg={16}>
             <Space direction="vertical" size={14} style={{ width: "100%" }}>
               {cartItems.map(({ product, quantity }) => {
                 const price = Number(product.price) || 0;
                 const imageSrc = product.imageUrl
-                  ? `http://localhost:9999${product.imageUrl}`
+                  ? `${API_URL}${product.imageUrl}`
                   : "/no-image.png";
 
                 return (
                   <Card
                     key={product._id}
                     bordered={false}
-                    style={{
-                      ...cardBase,
-                      overflow: "hidden",
-                      transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                    }}
+                    style={{ ...softCard, position: "relative" }}
                     bodyStyle={{ padding: 16 }}
                   >
+                    {/* Delete button - đẹp hơn, đặt góc phải trên */}
+                    <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
+                      <Tooltip title="Xóa sản phẩm">
+                        <Button
+                          danger
+                          size="small"
+                          shape="circle"
+                          icon={<DeleteOutlined />}
+                          onClick={() => removeFromCart(product._id)}
+                          style={{
+                            borderRadius: 999,
+                            boxShadow: token.boxShadowSecondary,
+                            background: token.colorBgContainer,
+                          }}
+                        />
+                      </Tooltip>
+                    </div>
+
                     <Row gutter={[16, 12]} align="middle">
-                      {/* Image */}
                       <Col xs={24} sm={6} md={5}>
                         <div
                           style={{
@@ -184,110 +212,111 @@ const Cart = () => {
                           <Image
                             src={imageSrc}
                             preview={false}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
                           />
                         </div>
                       </Col>
 
-                      {/* Info */}
                       <Col xs={24} sm={18} md={12}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ minWidth: 0 }}>
-                            <Title level={5} style={{ margin: 0, lineHeight: 1.35 }}>
-                              {product.productName}
-                            </Title>
+                        <div style={{ paddingRight: 34 /* chừa chỗ nút xóa */ }}>
+                          <Title level={5} style={{ margin: 0, lineHeight: 1.35 }}>
+                            {product.productName}
+                          </Title>
 
-                            <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                              {product.brand ? (
-                                <Tag
-                                  bordered={false}
-                                  style={{
-                                    borderRadius: 999,
-                                    marginRight: 0,
-                                    padding: "2px 10px",
-                                    background: token.colorFillSecondary,
-                                  }}
-                                >
-                                  {product.brand}
-                                </Tag>
-                              ) : null}
+                          <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {product.brand && (
+                              <Tag
+                                bordered={false}
+                                style={{
+                                  borderRadius: 999,
+                                  padding: "2px 10px",
+                                  marginRight: 0,
+                                }}
+                              >
+                                {product.brand}
+                              </Tag>
+                            )}
 
-                              {product.category ? (
-                                <Tag
-                                  bordered={false}
-                                  style={{
-                                    borderRadius: 999,
-                                    marginRight: 0,
-                                    padding: "2px 10px",
-                                    background: token.colorFillSecondary,
-                                  }}
-                                >
-                                  {product.category}
-                                </Tag>
-                              ) : null}
-                            </div>
+                            <Tag
+                              bordered={false}
+                              style={{
+                                borderRadius: 999,
+                                padding: "2px 10px",
+                                marginRight: 0,
+                              }}
+                            >
+                              <GiftOutlined style={{ marginRight: 6 }} />
+                              Hỗ trợ VAT
+                            </Tag>
                           </div>
 
-                          <Tooltip title="Xóa">
-                            <Button
-                              type="text"
-                              danger
-                              icon={<DeleteOutlined />}
-                              onClick={() => removeFromCart(product._id)}
-                              style={{ borderRadius: 12 }}
-                            />
-                          </Tooltip>
-                        </div>
+                          <div
+                            style={{
+                              marginTop: 14,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Text type="secondary">Số lượng</Text>
 
-                        <div
-                          style={{
-                            marginTop: 14,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Text type="secondary">Số lượng</Text>
+                            <Space.Compact>
+                              <Button
+                                onClick={() =>
+                                  updateQuantity(product._id, Math.max(1, quantity - 1))
+                                }
+                                disabled={quantity <= 1}
+                                style={{
+                                  borderTopLeftRadius: 12,
+                                  borderBottomLeftRadius: 12,
+                                }}
+                              >
+                                −
+                              </Button>
 
-                          <Space.Compact>
-                            <Button
-                              onClick={() => updateQuantity(product._id, Math.max(1, quantity - 1))}
-                              disabled={quantity <= 1}
-                              style={{ borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}
-                            >
-                              −
-                            </Button>
+                              <InputNumber
+                                min={1}
+                                value={quantity}
+                                controls={false}
+                                onChange={(val) => updateQuantity(product._id, val)}
+                                style={{ width: 82 }}
+                              />
 
-                            <InputNumber
-                              min={1}
-                              value={quantity}
-                              controls={false}
-                              onChange={(value) => updateQuantity(product._id, value)}
-                              style={{ width: 78, textAlign: "center" }}
-                            />
+                              <Button
+                                onClick={() => updateQuantity(product._id, quantity + 1)}
+                                style={{
+                                  borderTopRightRadius: 12,
+                                  borderBottomRightRadius: 12,
+                                }}
+                              >
+                                +
+                              </Button>
+                            </Space.Compact>
 
-                            <Button
-                              onClick={() => updateQuantity(product._id, quantity + 1)}
-                              style={{ borderTopRightRadius: 12, borderBottomRightRadius: 12 }}
-                            >
-                              +
-                            </Button>
-                          </Space.Compact>
-
-                          <Text type="secondary" style={{ marginLeft: "auto" }}>
-                            {price.toLocaleString()}₫ / sp
-                          </Text>
+                            <Text type="secondary" style={{ marginLeft: "auto" }}>
+                              Đơn giá: {money(price)}
+                            </Text>
+                          </div>
                         </div>
                       </Col>
 
-                      {/* Price */}
                       <Col xs={24} md={7} style={{ textAlign: "right" }}>
-                        <Text style={{ fontSize: 20, fontWeight: 900, color: token.colorPrimary }}>
-                          {(price * quantity).toLocaleString()}₫
+                        <Text
+                          style={{
+                            fontSize: 20,
+                            fontWeight: 900,
+                            color: token.colorPrimary,
+                          }}
+                        >
+                          {money(price * quantity)}
                         </Text>
                         <div>
-                          <Text type="secondary">Tạm tính</Text>
+                          <Text type="secondary">Thành tiền</Text>
                         </div>
                       </Col>
                     </Row>
@@ -295,7 +324,7 @@ const Cart = () => {
                 );
               })}
 
-              <div style={{ paddingTop: 6 }}>
+              <div style={{ paddingTop: 4 }}>
                 <Link to="/products">
                   <Button icon={<ArrowLeftOutlined />} style={{ borderRadius: 12 }}>
                     Tiếp tục mua sắm
@@ -305,63 +334,119 @@ const Cart = () => {
             </Space>
           </Col>
 
-          {/* RIGHT: Summary */}
+          {/* RIGHT: SUMMARY */}
           <Col xs={24} lg={8}>
             <div style={{ position: "sticky", top: 92 }}>
-              <Card bordered={false} style={cardBase} bodyStyle={{ padding: 18 }}>
-                <Title level={4} style={{ marginTop: 0, marginBottom: 12 }}>
-                  Tóm tắt đơn hàng
-                </Title>
+              <Card bordered={false} style={softCard} bodyStyle={{ padding: 18 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <div>
+                    <Title level={4} style={{ margin: 0 }}>
+                      Tóm tắt đơn hàng
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Dành cho mua lẻ & doanh nghiệp
+                    </Text>
+                  </div>
+
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      background: token.colorPrimaryBg,
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                      display: "grid",
+                      placeItems: "center",
+                    }}
+                  >
+                    <SafetyCertificateOutlined style={{ color: token.colorPrimary }} />
+                  </div>
+                </div>
+
+                <Divider style={{ margin: "12px 0" }} />
+
+                {/* Coupon (GIỮ LẠI) */}
+                <div
+                  style={{
+                    background: token.colorFillSecondary,
+                    border: `1px solid ${token.colorBorderSecondary}`,
+                    borderRadius: 16,
+                    padding: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <Text style={{ fontWeight: 900 }}>
+                    <TagOutlined style={{ marginRight: 8 }} />
+                    Mã ưu đãi
+                  </Text>
+                  <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                    <Input
+                      value={coupon}
+                      onChange={(e) => setCoupon(e.target.value)}
+                      placeholder="Nhập mã ưu đãi"
+                      style={{ borderRadius: 12 }}
+                    />
+                    <Button style={{ borderRadius: 12, fontWeight: 900 }}>
+                      Áp dụng
+                    </Button>
+                  </div>
+                </div>
 
                 <Space direction="vertical" size={12} style={{ width: "100%" }}>
                   <Row justify="space-between">
                     <Text type="secondary">Tạm tính</Text>
-                    <Text style={{ fontWeight: 800 }}>{subtotal.toLocaleString()}₫</Text>
+                    <Text style={{ fontWeight: 900 }}>{money(subtotal)}</Text>
                   </Row>
 
                   <Row justify="space-between">
                     <Text type="secondary">Vận chuyển</Text>
-                    <Text type="secondary" style={{ fontWeight: 700 }}>
-                      Tính ở bước thanh toán
+                    <Text type="secondary" style={{ fontWeight: 800 }}>
+                      Tính ở bước Checkout
                     </Text>
                   </Row>
 
                   <Divider style={{ margin: "8px 0" }} />
 
-                  <Row justify="space-between" align="middle">
-                    <Text style={{ fontWeight: 900, fontSize: 15 }}>Tổng cộng</Text>
-                    <Text style={{ fontWeight: 900, fontSize: 24, color: token.colorPrimary }}>
-                      {subtotal.toLocaleString()}₫
-                    </Text>
-                  </Row>
+                  <div
+                    style={{
+                      padding: 14,
+                      borderRadius: 16,
+                      background: token.colorPrimaryBg,
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 900, fontSize: 14 }}>
+                        Tổng thanh toán
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Có thể xuất hóa đơn VAT khi cần
+                      </Text>
+                    </div>
+                    <div style={{ fontWeight: 900, fontSize: 22, color: token.colorPrimary }}>
+                      {money(subtotal)}
+                    </div>
+                  </div>
 
                   <Button
                     type="primary"
                     size="large"
                     block
                     icon={<RightOutlined />}
-                    style={{ height: 50, borderRadius: 14, fontWeight: 800 }}
+                    style={{
+                      height: 52,
+                      borderRadius: 14,
+                      fontWeight: 900,
+                      boxShadow: token.boxShadowSecondary,
+                    }}
                     onClick={() => navigate("/checkout")}
                   >
                     Tiến hành thanh toán
                   </Button>
-
-                  <Divider style={{ margin: "10px 0" }} />
-
-                  <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                      <SafetyCertificateOutlined style={{ color: token.colorTextSecondary }} />
-                      <Text type="secondary">Thanh toán an toàn</Text>
-                    </div>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                      <CarOutlined style={{ color: token.colorTextSecondary }} />
-                      <Text type="secondary">Giao hàng toàn quốc</Text>
-                    </div>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                      <ReloadOutlined style={{ color: token.colorTextSecondary }} />
-                      <Text type="secondary">Đổi trả linh hoạt</Text>
-                    </div>
-                  </Space>
                 </Space>
               </Card>
             </div>
