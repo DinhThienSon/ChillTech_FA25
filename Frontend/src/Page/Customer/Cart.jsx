@@ -299,7 +299,7 @@ const Cart = () => {
                             </Space.Compact>
 
                             <Text type="secondary" style={{ marginLeft: "auto" }}>
-                              Đơn giá: {money(price)}
+                              
                             </Text>
                           </div>
                         </div>
