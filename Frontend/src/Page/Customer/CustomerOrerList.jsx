@@ -17,6 +17,20 @@ import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 const API_URL = "http://localhost:9999";
+const resolveImageUrl = (imageUrl) => {
+  if (!imageUrl) return "/no-image.png";
+
+  // Link ảnh ngoài
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://")
+  ) {
+    return imageUrl;
+  }
+
+  // Ảnh từ backend
+  return `${API_URL}${imageUrl}`;
+};
 
 // ===== UI (Only) =====
 // Chỉ chỉnh UI: style + bố cục. Không đổi logic/API/state.
@@ -113,7 +127,7 @@ const UI = {
     borderRadius: 999,
     background: "rgba(22,119,255,0.10)",
     border: "1px solid rgba(22,119,255,0.22)",
-  },
+},
   priceText: { color: "#0b3a8d", fontWeight: 950, fontSize: 16 },
 
   // buttons
@@ -236,7 +250,7 @@ export default function CustomerOrderList() {
                 Your Orders
               </Title>
               <div style={UI.subtitle}>
-                Theo dõi trạng thái, xem lại sản phẩm đã mua và mua lại nhanh.
+Theo dõi trạng thái, xem lại sản phẩm đã mua và mua lại nhanh.
               </div>
             </div>
           </div>
@@ -310,11 +324,8 @@ export default function CustomerOrderList() {
                         <Image
                           width={112}
                           height={112}
-                          src={
-                            item.product?.imageUrl
-                              ? `http://localhost:9999${item.product.imageUrl}`
-                              : "/no-image.png"
-                          }
+                          src={resolveImageUrl(item.product?.imageUrl)}
+                          fallback="/no-image.png"
                           style={{ width: 112, height: 112, objectFit: "cover" }}
                           preview={false}
                         />
@@ -324,7 +335,7 @@ export default function CustomerOrderList() {
                     <Col flex="auto" style={{ minWidth: 220 }}>
                       <Title level={5} style={UI.productName}>
                         {item.product?.productName}
-                      </Title>
+</Title>
 
                       <div style={UI.meta}>Số lượng: {item.quantity}</div>
 

@@ -39,13 +39,27 @@ const { Option } = Select;
 const API_URL = "http://localhost:9999";
 
 const money = (v) => (Number(v) || 0).toLocaleString("vi-VN");
+const resolveImageUrl = (imageUrl) => {
+  if (!imageUrl) return "/no-image.png";
+
+  // Link ngoài
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://")
+  ) {
+    return imageUrl;
+  }
+
+  // Ảnh upload từ backend
+  return `${API_URL}${imageUrl}`;
+};
 
 const ProductList = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-// data
+  // data
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,43 +85,42 @@ const ProductList = () => {
   const [pageSize, setPageSize] = useState(9);
 
 
-// ===== Styles (Blue theme) =====
-const buyBtnStyle = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: 14,
-  border: "none",
-  fontWeight: 900,
-  fontSize: 14,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 10,
-  background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-  boxShadow: "0 10px 24px rgba(37, 99, 235, 0.35)",
-};
+  // ===== Styles (Blue theme) =====
+  const buyBtnStyle = {
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 14,
+    border: "none",
+    fontWeight: 900,
+    fontSize: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+    boxShadow: "0 10px 24px rgba(37, 99, 235, 0.35)",
+  };
 
-const buyBtnHover = {
-  transform: "translateY(-2px) scale(1.01)",
-  boxShadow: "0 14px 32px rgba(37, 99, 235, 0.45)",
-};
+  const buyBtnHover = {
+    transform: "translateY(-2px) scale(1.01)",
+    boxShadow: "0 14px 32px rgba(37, 99, 235, 0.45)",
+  };
 
-const viewBtnStyle = {
-  width: "100%",
-  borderRadius: 12,
-  border: "1px solid rgba(37, 99, 235, 0.35)",
-  color: "#1d4ed8",
-  background: "#fff",
-};
-// ===============================
+  const viewBtnStyle = {
+    width: "100%",
+    borderRadius: 12,
+    border: "1px solid rgba(37, 99, 235, 0.35)",
+    color: "#1d4ed8",
+    background: "#fff",
+  };
+  // ===============================
 
   // load products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-
-        // Nếu backend bạn là /api/products thì đổi lại cho đúng.
+// Nếu backend bạn là /api/products thì đổi lại cho đúng.
         const res = await axios.get(`${API_URL}/api/products/public`);
         const data = res?.data?.data || [];
 
@@ -132,33 +145,33 @@ const viewBtnStyle = {
     fetchProducts();
   }, []);
 
-// load banners (public)
-useEffect(() => {
-  const fetchBanners = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/banners`, {
-        params: { page: "products" },
-      });
+  // load banners (public)
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/banners`, {
+          params: { page: "products" },
+        });
 
-      const list = res?.data?.data || [];
-      const mapped = list.map((b) => ({
-        id: b._id,
-        title: b.title,
-        subtitle: b.subtitle,
-        glowText: b.glowText,
-        ctaText: b.ctaText,
-        href: b.ctaLink,
-        imageUrl: b.imageUrl,
-        bgColor: b.bgValue,
-      }));
-      setBanners(mapped);
-    } catch (e) {
-      console.error("Fetch banners failed:", e);
-    }
-  };
+        const list = res?.data?.data || [];
+        const mapped = list.map((b) => ({
+          id: b._id,
+          title: b.title,
+          subtitle: b.subtitle,
+          glowText: b.glowText,
+          ctaText: b.ctaText,
+          href: b.ctaLink,
+          imageUrl: b.imageUrl,
+          bgColor: b.bgValue,
+        }));
+        setBanners(mapped);
+      } catch (e) {
+        console.error("Fetch banners failed:", e);
+      }
+    };
 
-  fetchBanners();
-}, []);
+    fetchBanners();
+  }, []);
 
 
   // categories list
@@ -220,7 +233,7 @@ useEffect(() => {
   }, [allProducts, search, categoriesSelected, inStockOnly, priceRange, sort]);
 
   // pagination
-  const total = filtered.length;
+const total = filtered.length;
   const pagedProducts = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
@@ -245,7 +258,7 @@ useEffect(() => {
   // ✅ fixed image container (no distortion)
   // (đổi qua cover để ảnh đều khung kiểu shop)
   const renderImage = (item) => {
-    const src = item.imageUrl ? `${API_URL}${item.imageUrl}` : "/no-image.png";
+    const src = resolveImageUrl(item.imageUrl);
 
     return (
       <div
@@ -260,6 +273,10 @@ useEffect(() => {
         <img
           alt={item.productName}
           src={src}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/no-image.png";
+          }}
           style={{
             width: "100%",
             height: "100%",
@@ -325,8 +342,7 @@ useEffect(() => {
               {item.price ? `${money(item.price)}₫` : "Liên hệ"}
             </Text>
           </div>
-
-          <div style={{ marginTop: 6 }}>
+<div style={{ marginTop: 6 }}>
             <Tag color={inStock ? "green" : "red"} style={{ margin: 0 }}>
               {inStock ? `Còn ${stock} sản phẩm` : "Tạm hết"}
             </Tag>
@@ -346,7 +362,8 @@ useEffect(() => {
                   return;
                 }
                 addToCart(item, 1);
-                message.success("Đã thêm vào giỏ!");              }}
+                message.success("Đã thêm vào giỏ!");
+              }}
               onMouseEnter={() => setIsHoverBuy(true)}
               onMouseLeave={() => setIsHoverBuy(false)}
               style={{
@@ -377,7 +394,7 @@ useEffect(() => {
   const ProductRowList = ({ item }) => {
     const stock = Number(item.stockQuantity) || 0;
     const inStock = stock > 0;
-    const src = item.imageUrl ? `${API_URL}${item.imageUrl}` : "/no-image.png";
+    const src = resolveImageUrl(item.imageUrl);
 
 
     const [isHoverBuy, setIsHoverBuy] = useState(false);
@@ -420,7 +437,7 @@ useEffect(() => {
 
           {/* INFO */}
           <div style={{ flex: "1 1 260px", minWidth: 220 }}>
-            <Space wrap size={[6, 6]}>
+<Space wrap size={[6, 6]}>
               <Tag color="blue">{item.category || "Chưa phân loại"}</Tag>
               <Tag color={inStock ? "green" : "red"}>
                 {inStock ? "Còn hàng" : "Hết hàng"}
@@ -469,13 +486,14 @@ useEffect(() => {
                 onMouseEnter={() => setIsHoverBuy(true)}
                 onMouseLeave={() => setIsHoverBuy(false)}
                 onClick={() => {
-                if (!user) {
-                  message.info("Vui lòng đăng nhập để thêm vào giỏ");
-                  navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
-                  return;
-                }
+                  if (!user) {
+                    message.info("Vui lòng đăng nhập để thêm vào giỏ");
+                    navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
+                    return;
+                  }
                   addToCart(item, 1);
-                  message.success("Đã thêm vào giỏ!");              }}
+                  message.success("Đã thêm vào giỏ!");
+                }}
                 style={{
                   ...buyBtnStyle,
                   ...(isHoverBuy ? buyBtnHover : null),
@@ -508,11 +526,10 @@ useEffect(() => {
           Sản phẩm linh kiện điện lạnh
         </Title>
         <Text type="secondary">
-        
+
         </Text>
       </div>
-
-      {/* Featured banner (from DB) */}
+{/* Featured banner (from DB) */}
       {banners.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <FeaturedBanner items={banners} height={280} />
@@ -594,7 +611,7 @@ useEffect(() => {
                   >
                     <Space direction="vertical" size={8} style={{ width: "100%" }}>
                       {(showAllCats ? categories : categories.slice(0, 8)).map((cat) => (
-                        <Checkbox key={cat} value={cat}>
+<Checkbox key={cat} value={cat}>
                           <span style={{ fontWeight: categoriesSelected.includes(cat) ? 600 : 400 }}>
                             {cat}
                           </span>
@@ -679,7 +696,7 @@ useEffect(() => {
 
                     return pagedProducts.map((item) => (
                       <Col
-                        xs={24}
+xs={24}
                         sm={12}
                         lg={lgSpan}
                         key={item._id}

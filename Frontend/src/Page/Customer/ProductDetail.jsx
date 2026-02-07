@@ -299,9 +299,26 @@ const ProductDetail = () => {
                   </Button>
                 </Col>
                 <Col span={24}>
-                  <Button size="large" block disabled={stock <= 0}>
-                    Mua ngay
-                  </Button>
+                  <Button
+  size="large"
+  block
+  disabled={stock <= 0}
+  onClick={() => {
+    if (!user) {
+      message.info("Vui lòng đăng nhập để mua hàng");
+      navigate("/login", {
+        replace: true,
+        state: { from: location.pathname + location.search },
+      });
+      return;
+    }
+
+    addToCart(product, quantity);
+    navigate("/cart");
+  }}
+>
+  Mua ngay
+</Button>
                 </Col>
               </Row>
 

@@ -40,6 +40,20 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 
 const API_URL = "http://localhost:9999";
+const resolveImageUrl = (imageUrl) => {
+  if (!imageUrl) return "/no-image.png";
+
+  // Link ảnh ngoài
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://")
+  ) {
+    return imageUrl;
+  }
+
+  // Ảnh upload từ backend
+  return `${API_URL}${imageUrl}`;
+};
 
 const CheckOut = () => {
   const navigate = useNavigate();
@@ -108,7 +122,7 @@ const CheckOut = () => {
   );
 
   const shippingFee = useMemo(() => {
-    if (receiveMethod === "pickup") return 0;
+if (receiveMethod === "pickup") return 0;
     if (!shippingUnit || totalWeight === 0) return 0;
 
     if (shippingUnit === "Giao hàng nhanh") {
@@ -155,12 +169,12 @@ const CheckOut = () => {
         },
         invoice: needInvoice
           ? {
-              companyName: values.companyName,
-              taxCode: values.taxCode,
-              invoiceAddress: values.invoiceAddress,
-              invoiceEmail: values.invoiceEmail,
-              invoiceNote: values.invoiceNote || "",
-            }
+            companyName: values.companyName,
+            taxCode: values.taxCode,
+            invoiceAddress: values.invoiceAddress,
+            invoiceEmail: values.invoiceEmail,
+            invoiceNote: values.invoiceNote || "",
+          }
           : null,
       };
 
@@ -192,7 +206,7 @@ const CheckOut = () => {
     background: `radial-gradient(1100px 520px at 15% -10%, ${token.colorPrimaryBg} 0%, transparent 55%),
                  radial-gradient(900px 420px at 100% 0%, ${token.colorInfoBg} 0%, transparent 55%),
                  linear-gradient(180deg, ${token.colorFillSecondary} 0%, ${token.colorBgLayout} 55%, ${token.colorBgLayout} 100%)`,
-    minHeight: "calc(100vh - 64px)",
+minHeight: "calc(100vh - 64px)",
     padding: "28px 0 56px",
   };
   const container = { maxWidth: 1200, margin: "0 auto", padding: "0 16px" };
@@ -288,7 +302,7 @@ const CheckOut = () => {
 
                   <Row gutter={[16, 10]}>
                     <Col xs={24} md={12}>
-                      <Form.Item
+<Form.Item
                         label="Tên người nhận"
                         name="receiverName"
                         rules={[{ required: true, message: "Vui lòng nhập tên người nhận" }]}
@@ -356,17 +370,16 @@ const CheckOut = () => {
                     >
                       <Row gutter={[12, 12]}>
                         <Col xs={24} md={12}>
-                          <div
+<div
                             onClick={() => setReceiveMethod("delivery")}
                             style={{
                               cursor: "pointer",
                               padding: 14,
                               borderRadius: 16,
-                              border: `1px solid ${
-                                receiveMethod === "delivery"
-                                  ? token.colorPrimary
-                                  : token.colorBorderSecondary
-                              }`,
+                              border: `1px solid ${receiveMethod === "delivery"
+                                ? token.colorPrimary
+                                : token.colorBorderSecondary
+                                }`,
                               background:
                                 receiveMethod === "delivery"
                                   ? token.colorPrimaryBg
@@ -399,11 +412,10 @@ const CheckOut = () => {
                               cursor: "pointer",
                               padding: 14,
                               borderRadius: 16,
-                              border: `1px solid ${
-                                receiveMethod === "pickup"
-                                  ? token.colorPrimary
-                                  : token.colorBorderSecondary
-                              }`,
+                              border: `1px solid ${receiveMethod === "pickup"
+                                ? token.colorPrimary
+                                : token.colorBorderSecondary
+                                }`,
                               background:
                                 receiveMethod === "pickup"
                                   ? token.colorPrimaryBg
@@ -419,7 +431,7 @@ const CheckOut = () => {
                               <div>
                                 <div style={{ fontWeight: 900, lineHeight: 1.2 }}>
                                   Tự đến lấy
-                                </div>
+</div>
                                 <Text type="secondary" style={{ fontSize: 12 }}>
                                   Nhận tại điểm lấy hàng
                                 </Text>
@@ -478,7 +490,7 @@ const CheckOut = () => {
                                       onMouseDown={(e) => e.preventDefault()}
                                       onClick={() => {
                                         setAddressQuery(item.display_name);
-                                        form.setFieldsValue({
+form.setFieldsValue({
                                           shippingAddress: item.display_name,
                                         });
                                         setAddressResults([]);
@@ -544,7 +556,7 @@ const CheckOut = () => {
                             showIcon
                             style={{ borderRadius: 14 }}
                             message="Tự đến lấy"
-                            description="Vui lòng mang theo mã đơn hàng khi đến nhận. Bộ phận kho sẽ liên hệ khi hàng sẵn sàng."
+description="Vui lòng mang theo mã đơn hàng khi đến nhận. Bộ phận kho sẽ liên hệ khi hàng sẵn sàng."
                           />
                         </Col>
 
@@ -611,7 +623,7 @@ const CheckOut = () => {
                             ]}
                           >
                             <Input prefix={<HomeOutlined />} placeholder="Địa chỉ theo đăng ký doanh nghiệp" />
-                          </Form.Item>
+</Form.Item>
                         </Col>
 
                         <Col xs={24} md={12}>
@@ -681,10 +693,8 @@ const CheckOut = () => {
                 {/* Items mini list */}
                 <Space direction="vertical" size={12} style={{ width: "100%" }}>
                   {cartItems.map(({ product, quantity }) => {
-                    const imageSrc = product.imageUrl
-                      ? `${API_URL}${product.imageUrl}`
-                      : "/no-image.png";
-                    const line = Number(product.price || 0) * quantity;
+                    const imageSrc = resolveImageUrl(product.imageUrl);
+const line = Number(product.price || 0) * quantity;
 
                     return (
                       <div
@@ -711,8 +721,10 @@ const CheckOut = () => {
                             height={64}
                             src={imageSrc}
                             preview={false}
+                            fallback="/no-image.png"
                             style={{ objectFit: "cover" }}
                           />
+
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -758,7 +770,7 @@ const CheckOut = () => {
                   </Row>
 
                   <Row justify="space-between">
-                    <Text type="secondary">Tổng cân nặng</Text>
+<Text type="secondary">Tổng cân nặng</Text>
                     <Text style={{ fontWeight: 800 }}>
                       {totalWeight.toFixed(2)} kg
                     </Text>
@@ -832,7 +844,7 @@ const CheckOut = () => {
                     </div>
                     <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                       <CarOutlined style={{ color: token.colorTextSecondary }} />
-                      <Text type="secondary">
+<Text type="secondary">
                         {receiveMethod === "pickup"
                           ? "Nhận tại điểm lấy hàng"
                           : "Theo dõi vận chuyển theo đơn vị"}

@@ -37,6 +37,12 @@ const Cart = () => {
 
   const [coupon, setCoupon] = useState("");
 
+  /* ===== IMAGE RESOLVER (LINK or UPLOAD) ===== */
+  const resolveImage = (imageUrl) => {
+    if (!imageUrl) return "/no-image.png";
+    return imageUrl.startsWith("http") ? imageUrl : `${API_URL}${imageUrl}`;
+  };
+
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => {
       const price = Number(item.product.price) || 0;
@@ -143,7 +149,8 @@ const Cart = () => {
               Giỏ hàng của bạn
             </Title>
             <Text type="secondary">
-              {cartItems.length} sản phẩm • Kiểm tra số lượng và tiến hành thanh toán
+              {cartItems.length} sản phẩm • Kiểm tra số lượng và tiến hành thanh
+              toán
             </Text>
           </div>
 
@@ -167,9 +174,7 @@ const Cart = () => {
             <Space direction="vertical" size={14} style={{ width: "100%" }}>
               {cartItems.map(({ product, quantity }) => {
                 const price = Number(product.price) || 0;
-                const imageSrc = product.imageUrl
-                  ? `${API_URL}${product.imageUrl}`
-                  : "/no-image.png";
+                const imageSrc = resolveImage(product.imageUrl);
 
                 return (
                   <Card
@@ -178,8 +183,15 @@ const Cart = () => {
                     style={{ ...softCard, position: "relative" }}
                     bodyStyle={{ padding: 16 }}
                   >
-                    {/* Delete button - đẹp hơn, đặt góc phải trên */}
-                    <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
+                    {/* Delete button - góc phải trên */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 12,
+                        right: 12,
+                        zIndex: 2,
+                      }}
+                    >
                       <Tooltip title="Xóa sản phẩm">
                         <Button
                           danger
@@ -211,6 +223,7 @@ const Cart = () => {
                         >
                           <Image
                             src={imageSrc}
+                            fallback="/no-image.png"
                             preview={false}
                             style={{
                               width: "100%",
@@ -227,7 +240,14 @@ const Cart = () => {
                             {product.productName}
                           </Title>
 
-                          <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <div
+                            style={{
+                              marginTop: 8,
+                              display: "flex",
+                              gap: 8,
+                              flexWrap: "wrap",
+                            }}
+                          >
                             {product.brand && (
                               <Tag
                                 bordered={false}
@@ -268,7 +288,10 @@ const Cart = () => {
                             <Space.Compact>
                               <Button
                                 onClick={() =>
-                                  updateQuantity(product._id, Math.max(1, quantity - 1))
+                                  updateQuantity(
+                                    product._id,
+                                    Math.max(1, quantity - 1)
+                                  )
                                 }
                                 disabled={quantity <= 1}
                                 style={{
@@ -283,12 +306,19 @@ const Cart = () => {
                                 min={1}
                                 value={quantity}
                                 controls={false}
-                                onChange={(val) => updateQuantity(product._id, val)}
+                                onChange={(val) =>
+                                  updateQuantity(
+                                    product._id,
+                                    Math.max(1, Number(val || 1))
+                                  )
+                                }
                                 style={{ width: 82 }}
                               />
 
                               <Button
-                                onClick={() => updateQuantity(product._id, quantity + 1)}
+                                onClick={() =>
+                                  updateQuantity(product._id, quantity + 1)
+                                }
                                 style={{
                                   borderTopRightRadius: 12,
                                   borderBottomRightRadius: 12,
@@ -298,9 +328,7 @@ const Cart = () => {
                               </Button>
                             </Space.Compact>
 
-                            <Text type="secondary" style={{ marginLeft: "auto" }}>
-                              
-                            </Text>
+                            <Text type="secondary" style={{ marginLeft: "auto" }} />
                           </div>
                         </div>
                       </Col>
@@ -338,7 +366,14 @@ const Cart = () => {
           <Col xs={24} lg={8}>
             <div style={{ position: "sticky", top: 92 }}>
               <Card bordered={false} style={softCard} bodyStyle={{ padding: 18 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 10,
+                  }}
+                >
                   <div>
                     <Title level={4} style={{ margin: 0 }}>
                       Tóm tắt đơn hàng
@@ -365,7 +400,7 @@ const Cart = () => {
 
                 <Divider style={{ margin: "12px 0" }} />
 
-                {/* Coupon (GIỮ LẠI) */}
+                {/* Coupon */}
                 <div
                   style={{
                     background: token.colorFillSecondary,
@@ -427,7 +462,13 @@ const Cart = () => {
                         Có thể xuất hóa đơn VAT khi cần
                       </Text>
                     </div>
-                    <div style={{ fontWeight: 900, fontSize: 22, color: token.colorPrimary }}>
+                    <div
+                      style={{
+                        fontWeight: 900,
+                        fontSize: 22,
+                        color: token.colorPrimary,
+                      }}
+                    >
                       {money(subtotal)}
                     </div>
                   </div>

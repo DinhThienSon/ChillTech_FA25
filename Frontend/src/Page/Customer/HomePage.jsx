@@ -13,11 +13,27 @@ import { useAuth } from "../../Routes/Context/AuthContext";
 
 const API_URL = "http://localhost:9999";
 
+/* ================== ✅ FIX ẢNH DÙNG CHUNG ================== */
+const resolveImageUrl = (imageUrl) => {
+  if (!imageUrl) return "/no-image.png";
+
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://")
+  ) {
+    return imageUrl;
+  }
+
+  return `${API_URL}${imageUrl}`;
+};
+/* ========================================================= */
+
 const HomePage = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,42 +77,41 @@ const HomePage = () => {
     fetchHomeData();
   }, []);
 
-// =============================
-// 📥 FETCH HOME BANNERS (PUBLIC)
-// =============================
-useEffect(() => {
-  const fetchHomeBanners = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/banners?page=home`);
-      if (!res.ok) return;
+  // =============================
+  // 📥 FETCH HOME BANNERS
+  // =============================
+  useEffect(() => {
+    const fetchHomeBanners = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/banners?page=home`);
+        if (!res.ok) return;
 
-      const result = await res.json();
-      const list = result.data || [];
+        const result = await res.json();
+        const list = result.data || [];
 
-      const mapped = list.map((b) => ({
-        id: b._id,
-        title: b.title,
-        subtitle: b.subtitle,
-        glowText: b.glowText,
-        ctaText: b.ctaText,
-        href: b.ctaLink,
-        imageUrl: b.imageUrl,
-        bgColor: b.bgValue,
-      }));
+        const mapped = list.map((b) => ({
+          id: b._id,
+          title: b.title,
+          subtitle: b.subtitle,
+          glowText: b.glowText,
+          ctaText: b.ctaText,
+          href: b.ctaLink,
+          imageUrl: resolveImageUrl(b.imageUrl), // ✅ FIX
+          bgColor: b.bgValue,
+        }));
 
-      setHomeBanners(mapped);
-    } catch (e) {
-      console.error("Lỗi fetch banner:", e);
-    }
-  };
+        setHomeBanners(mapped);
+      } catch (e) {
+        console.error("Lỗi fetch banner:", e);
+      }
+    };
 
-  fetchHomeBanners();
+    fetchHomeBanners();
 }, []);
-
 
   return (
     <div style={{ fontFamily: "Segoe UI, sans-serif", color: "#0b1c36" }}>
-      {/* ================= FEATURED BANNER (from DB) ================= */}
+      {/* ================= FEATURED BANNER ================= */}
       {homeBanners.length > 0 && (
         <section style={{ padding: "16px 20px", background: "#fff" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -104,6 +119,7 @@ useEffect(() => {
           </div>
         </section>
       )}
+
       {/* ================= HERO ================= */}
       <section
         style={{
@@ -117,7 +133,9 @@ useEffect(() => {
             <Col xs={24} md={12}>
               <h1 style={{ fontSize: 48, fontWeight: 800 }}>
                 Linh Kiện Điện Lạnh <br />
-                <span style={{ color: "#1890ff" }}>Chất Lượng Cao</span>
+                <span style={{ color: "#1890ff" }}>
+                  Chất Lượng Cao
+                </span>
               </h1>
               <p
                 style={{
@@ -179,93 +197,113 @@ useEffect(() => {
             </div>
           ) : (
             <Row gutter={[24, 24]}>
-              {products.map((item) => (
-                <Col xs={24} sm={12} md={8} key={item._id}>
-                  <Card
-                    hoverable
-                    style={{ borderRadius: 16 }}
-                    cover={
-                      <Link to={`/products/${item._id}`}>
-                        <div
-                          style={{
-                            height: 220,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "#fff",
-                            borderBottom: "1px solid #f0f0f0",
-                          }}
-                        >
-                          <img
-                            src={
-                              item.imageUrl
-                                ? `${API_URL}${item.imageUrl}`
-                                : "/no-image.png"
-                            }
-                            alt={item.productName}
+              {products.map((item) => {
+const imgSrc = resolveImageUrl(item.imageUrl);
+
+                return (
+                  <Col xs={24} sm={12} md={8} key={item._id}>
+                    <Card
+                      hoverable
+                      style={{ borderRadius: 16 }}
+                      cover={
+                        <Link to={`/products/${item._id}`}>
+                          <div
                             style={{
-                              maxHeight: "100%",
-                              maxWidth: "100%",
-                              objectFit: "contain",
+                              height: 220,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: "#fff",
+                              borderBottom:
+                                "1px solid #f0f0f0",
                             }}
-                          />
-                        </div>
-                      </Link>
-                    }
-                  >
-                    {item.featured && (
-                      <Tag color="blue" style={{ marginBottom: 8 }}>
-                        Nổi bật
-                      </Tag>
-                    )}
-
-                    <h4 style={{ minHeight: 44 }}>
-                      <Link
-                        to={`/products/${item._id}`}
-                        style={{ color: "#0b1c36" }}
-                      >
-                        {item.productName}
-                      </Link>
-                    </h4>
-
-                    <div
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "#1890ff",
-                        marginBottom: 12,
-                      }}
-                    >
-                      {item.price
-                        ? item.price.toLocaleString() + "₫"
-                        : "Liên hệ"}
-                    </div>
-
-                    <Button
-                      type="primary"
-                      block
-                      icon={<ShoppingCartOutlined />}
-                                        onClick={() => {
-                      if (!user) {
-                        message.info("Vui lòng đăng nhập để thêm vào giỏ");
-                        navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
-                        return;
+                          >
+                            <img
+                              src={imgSrc}
+                              alt={item.productName}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/no-image.png";
+                              }}
+                              style={{
+                                maxHeight: "100%",
+                                maxWidth: "100%",
+                                objectFit: "contain",
+                              }}
+                            />
+                          </div>
+                        </Link>
                       }
-                      addToCart(item, 1);
-                      message.success("Đã thêm vào giỏ!");
-                    }}
                     >
-                      Thêm vào giỏ
-                    </Button>
-                  </Card>
-                </Col>
-              ))}
+                      {item.featured && (
+                        <Tag
+                          color="blue"
+                          style={{ marginBottom: 8 }}
+                        >
+                          Nổi bật
+                        </Tag>
+                      )}
+
+                      <h4 style={{ minHeight: 44 }}>
+                        <Link
+                          to={`/products/${item._id}`}
+                          style={{ color: "#0b1c36" }}
+                        >
+                          {item.productName}
+                        </Link>
+                      </h4>
+
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 700,
+                          color: "#1890ff",
+                          marginBottom: 12,
+                        }}
+                      >
+                        {item.price
+                          ? item.price.toLocaleString() +
+                            "₫"
+                          : "Liên hệ"}
+                      </div>
+
+                      <Button
+                        type="primary"
+                        block
+                        icon={<ShoppingCartOutlined />}
+                        onClick={() => {
+                          if (!user) {
+                            message.info(
+                              "Vui lòng đăng nhập để thêm vào giỏ"
+                            );
+navigate("/login", {
+                              replace: true,
+                              state: {
+                                from:
+                                  location.pathname +
+                                  location.search,
+                              },
+                            });
+                            return;
+                          }
+                          addToCart(item, 1);
+                          message.success(
+                            "Đã thêm vào giỏ!"
+                          );
+                        }}
+                      >
+                        Thêm vào giỏ
+                      </Button>
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
           )}
         </div>
       </section>
 
-      {/* ================= COMMITMENT SECTION ================= */}
+      {/* ================= COMMITMENT ================= */}
       <section style={{ padding: "70px 20px", background: "#f9fafb" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <Row gutter={[24, 24]} justify="center">

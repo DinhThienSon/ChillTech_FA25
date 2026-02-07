@@ -83,11 +83,23 @@ const updateProduct = async (req, res) => {
   try {
     const payload = { ...req.body };
 
+    // Nếu upload file → dùng file
     if (req.file) {
       payload.imageUrl = `/uploads/products/${req.file.filename}`;
     }
+    // Nếu không upload file nhưng có link
+    else if (req.body.imageUrl) {
+      payload.imageUrl = req.body.imageUrl;
+    }
+    // Nếu không có cả hai → KHÔNG set imageUrl
+    else {
+      delete payload.imageUrl;
+    }
 
-    const product = await productService.updateProduct(req.params.id, payload);
+    const product = await productService.updateProduct(
+      req.params.id,
+      payload
+    );
 
     return res.json({
       message: "Cập nhật sản phẩm thành công",
